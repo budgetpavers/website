@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5 pt-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="text-center mb-4">
+        <div class="alert alert-success">
+          <h2><i class="fas fa-check-circle"></i> Order Confirmed!</h2>
+          <p class="mb-0">Thank you for your order. We've received your payment and will process your order soon.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h4>Order Details</h4>
+        </div>
+        <div class="card-body">
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <h6>Order Information</h6>
+              <p><strong>Order Number:</strong> {{ order.order_number }}</p>
+              <p><strong>Date:</strong> {{ order.created_at|date:"M d, Y" }}</p>
+              <p><strong>Status:</strong>
+                <span class="badge bg-primary">{{ order.get_status_display }}</span>
+              </p>
+            </div>
+            <div class="col-md-6">
+              <h6>Customer Information</h6>
+              <p><strong>Name:</strong> {{ order.customer.full_name }}</p>
+              <p><strong>Email:</strong> {{ order.customer.email }}</p>
+              <p><strong>Phone:</strong> {{ order.customer.phone }}</p>
+            </div>
+          </div>
+
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <h6>Billing Address</h6>
+              <address>
+                {{ order.customer.billing_address_line1 }}<br>
+                {{ order.customer.billing_city }}, {{ order.customer.billing_state }} {{ order.customer.billing_postcode }}<br>
+                {{ order.customer.billing_country }}
+              </address>
+            </div>
+            <div class="col-md-6">
+              <h6>Delivery Address</h6>
+              <address>
+                {{ order.customer.delivery_address_line1 }}<br>
+                {{ order.customer.delivery_city }}, {{ order.customer.delivery_state }} {{ order.customer.delivery_postcode }}<br>
+                {{ order.customer.delivery_country }}
+              </address>
+              <p><strong>Delivery Zone:</strong> {{ order.customer.delivery_zone }}</p>
+            </div>
+          </div>
+
+          <h6>Order Items</h6>
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Quantity</th>
+                  <th>Unit Price</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in order.items.all %}
+                <tr>
+                  <td>
+                    {{ item.product_name }}
+                    {% if item.product_length %}
+                      <br><small class="text-muted">Length: {{ item.product_length }}</small>
+                    {% endif %}
+                    {% if item.product_thickness %}
+                      <br><small class="text-muted">Thickness: {{ item.product_thickness }}</small>
+                    {% endif %}
+                  </td>
+                  <td>{{ item.quantity }}</td>
+                  <td>${{ item.unit_price|floatformat:2 }}</td>
+                  <td>${{ item.total_price|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th colspan="3">Subtotal</th>
+                  <th>${{ order.subtotal|floatformat:2 }}</th>
+                </tr>
+                <tr>
+                  <th colspan="3">Delivery ({{ order.customer.delivery_zone }})</th>
+                  <th>${{ order.delivery_cost|floatformat:2 }}</th>
+                </tr>
+                <tr>
+                  <th colspan="3">GST (10%)</th>
+                  <th>${{ order.tax_amount|floatformat:2 }}</th>
+                </tr>
+                <tr class="table-active">
+                  <th colspan="3">Total</th>
+                  <th>${{ order.total_amount|floatformat:2 }}</th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center mt-4">
+        <h5>What happens next?</h5>
+        <div class="row text-center mt-3">
+          <div class="col-md-4">
+            <div class="card border-0">
+              <div class="card-body">
+                <i class="fas fa-clipboard-check fa-2x text-primary mb-2"></i>
+                <h6>Order Processing</h6>
+                <p class="small text-muted">We'll prepare your order within 1-2 business days</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card border-0">
+              <div class="card-body">
+                <i class="fas fa-truck fa-2x text-warning mb-2"></i>
+                <h6>Delivery Scheduled</h6>
+                <p class="small text-muted">We'll contact you to arrange delivery</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card border-0">
+              <div class="card-body">
+                <i class="fas fa-home fa-2x text-success mb-2"></i>
+                <h6>Delivered</h6>
+                <p class="small text-muted">Your concrete sleepers delivered to your door</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert alert-info mt-4">
+        <h6><i class="fas fa-envelope"></i> Confirmation Email</h6>
+        <p class="mb-0">
+          We've sent a confirmation email to <strong>{{ order.customer.email }}</strong> with your order details and receipt.
+          If you don't see it, please check your spam folder.
+        </p>
+      </div>
+
+      <div class="text-center mt-4">
+        <a href="{% url 'homepage' %}" class="btn btn-primary">Continue Shopping</a>
+        <a href="{% url 'our_range' %}" class="btn btn-outline-secondary">View Products</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

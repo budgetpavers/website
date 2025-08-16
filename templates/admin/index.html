@@ -1,0 +1,78 @@
+{% extends "admin/index.html" %}
+
+{% block content %}
+  {{ block.super }}
+
+  <!-- Pending Quotes -->
+  <div class="dashboard-module" style="margin-top: 30px;">
+      <h2>🚨 Pending Quotes</h2>
+      <table class="table table-striped">
+          <thead>
+              <tr>
+                  <th>Customer</th>
+                  <th>Submitted At</th>
+                  <th>Calculator</th>
+                  <th>Link</th>
+              </tr>
+          </thead>
+          <tbody>
+              {% if pending_quotes %}
+                  {% for req in pending_quotes %}
+                      <tr>
+                          <td>{{ req.customer_name }}</td>
+                          <td>{{ req.created_at|date:"SHORT_DATETIME_FORMAT" }}</td>
+                          <td>{{ req.calculator_type|capfirst }}</td>
+                          <td>
+                              <a href="{% url 'admin:quotes_quoterequest_change' req.id %}" class="btn btn-sm btn-primary">
+                                  View
+                              </a>
+                          </td>
+                      </tr>
+                  {% endfor %}
+              {% else %}
+                  <tr>
+                      <td colspan="4" class="text-center">No pending quotes at the moment</td>
+                  </tr>
+              {% endif %}
+          </tbody>
+      </table>
+  </div>
+
+  <!-- Approved Delivery Schedule -->
+  <div class="dashboard-module" style="margin-top: 50px;">
+      <h2>
+        <a href="{% url 'admin:delivery_calendar' %}" style="text-decoration: none; color: inherit;">
+          📆 Approved Delivery Schedule
+        </a>
+      </h2>
+      <table class="table table-striped">
+          <thead>
+              <tr>
+                  <th>Customer</th>
+                  <th>Delivery Date</th>
+                  <th>Suburb</th>
+                  <th>Dimensions</th>
+                  <th>Status</th>
+              </tr>
+          </thead>
+          <tbody>
+              {% if approved_requests %}
+                  {% for req in approved_requests %}
+                      <tr>
+                          <td>{{ req.customer_name }}</td>
+                          <td>{{ req.preferred_date }}</td>
+                          <td>{{ req.delivery_address }}</td>
+                          <td>{{ req.wall_length }}m x {{ req.wall_height }}m</td>
+                          <td>{{ req.status|capfirst }}</td>
+                      </tr>
+                  {% endfor %}
+              {% else %}
+                  <tr>
+                      <td colspan="5" class="text-center">No approved deliveries yet.</td>
+                  </tr>
+              {% endif %}
+          </tbody>
+      </table>
+  </div>
+{% endblock %}
+

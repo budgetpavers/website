@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<section class="page-header text-center mt-4 pt-5">
+  <h1>Ashwood</h1>
+  <p>The Ashwood Concrete Sleeper is one of the most popular sleepers in our range, with its timeless look and exceptional strength.</p>
+</section>
+
+<div class="container product-detail mt-4">
+  <div class="row">
+    <!-- Gallery -->
+    <div class="col-md-6">
+      <img src="{% static 'images/ashwood_main.jpg' %}" class="img-fluid mb-2" alt="Ashwood Main">
+      <div>
+        <img src="{% static 'images/ashwood_thumb1.jpg' %}" class="img-thumbnail me-1" style="width: 80px;" alt="Thumb 1">
+        <img src="{% static 'images/ashwood_thumb2.jpg' %}" class="img-thumbnail me-1" style="width: 80px;" alt="Thumb 2">
+      </div>
+    </div>
+
+    <!-- Info -->
+    <div class="col-md-6">
+      <h2>Ashwood Concrete Sleeper</h2>
+      <p>The Ashwood concrete sleeper is designed with a realistic timber look that complements any garden or landscape while providing the strength of concrete. Perfect for retaining walls of all sizes.</p>
+
+      <div class="accordion" id="productAccordion">
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#specs">
+              Specifications
+            </button>
+          </h2>
+          <div id="specs" class="accordion-collapse collapse show">
+            <div class="accordion-body">
+              <ul>
+                <li>Length: 2.0m and 2.4m</li>
+                <li>Thickness: 75mm and 100mm</li>
+                <li>Weight: Approx. 60–80kg per sleeper</li>
+                <li>Finish: Timber look concrete</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary mt-3">Enquire Now</button>
+    </div>
+  </div>
+</div>
+
+<section class="container mt-5">
+  <h3>Description</h3>
+  <p>The Ashwood sleeper combines the beauty of timber with the strength and longevity of concrete. Whether you are building a garden bed, a small retaining wall, or a structural wall requiring engineering, the Ashwood is a fantastic choice.</p>
+
+  <h4>Features:</h4>
+  <ul>
+    <li>Realistic timber-look finish</li>
+    <li>Durable & weather resistant</li>
+    <li>Engineered for strength & longevity</li>
+    <li>Available in 2.0m and 2.4m lengths</li>
+  </ul>
+</section>
+
+<section class="container mt-4">
+  <h3>Specifications Table</h3>
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Length</th>
+        <th>Thickness</th>
+        <th>Weight</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2.0m</td>
+        <td>75mm</td>
+        <td>60kg</td>
+      </tr>
+      <tr>
+        <td>2.4m</td>
+        <td>75mm</td>
+        <td>72kg</td>
+      </tr>
+      <tr>
+        <td>2.0m</td>
+        <td>100mm</td>
+        <td>80kg</td>
+      </tr>
+      <tr>
+        <td>2.4m</td>
+        <td>100mm</td>
+        <td>92kg</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="container mt-4">
+  <h3>Gallery</h3>
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <img src="{% static 'images/ashwood_gallery1.jpg' %}" class="img-fluid" alt="Gallery 1">
+    </div>
+    <div class="col-md-4 mb-3">
+      <img src="{% static 'images/ashwood_gallery2.jpg' %}" class="img-fluid" alt="Gallery 2">
+    </div>
+    <div class="col-md-4 mb-3">
+      <img src="{% static 'images/ashwood_gallery3.jpg' %}" class="img-fluid" alt="Gallery 3">
+    </div>
+  </div>
+</section>
+
+{% endblock %}

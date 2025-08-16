@@ -1,0 +1,1945 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+  /* Updated Desert Color Scheme */
+  :root {
+    --primary-color: #C4936A; /* Desert tan */
+    --primary-light: #D4A57A;
+    --primary-dark: #B4835A;
+    --secondary-color: #8B7355; /* Warm brown */
+    --secondary-light: #9B8365;
+    --secondary-dark: #7B6345;
+    --accent-color: #E6D7C3; /* Cream/sand */
+    --accent-dark: #D6C7B3;
+    --text-dark: #4A3728;
+    --text-light: #6A5748;
+    --bg-light: #F7F3EE;
+    --bg-gradient: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    --shadow-sm: 0 2px 4px rgba(196, 147, 106, 0.1);
+    --shadow-md: 0 4px 6px rgba(196, 147, 106, 0.15);
+    --shadow-lg: 0 10px 25px rgba(196, 147, 106, 0.2);
+    --shadow-xl: 0 20px 40px rgba(196, 147, 106, 0.25);
+  }
+
+  /* Homepage specific styles */
+  .hero {
+    background: var(--bg-gradient);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    margin-top: -100px;
+    padding-top: 100px;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100%" height="100%" fill="url(%23grid)"/></svg>');
+    pointer-events: none;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Logo Integration */
+  .navbar-brand img {
+    height: 60px;
+    width: auto;
+    filter: brightness(1.1);
+  }
+
+  .hero h1 {
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 800;
+    color: white;
+    margin-bottom: 1.5rem;
+    line-height: 1.1;
+  }
+
+  .hero .lead {
+    font-size: clamp(1rem, 2.5vw, 1.25rem);
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 2rem;
+    font-weight: 400;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 3rem;
+    margin-top: 3rem;
+  }
+
+  .hero-stat {
+    text-align: center;
+    color: white;
+  }
+
+  .hero-stat-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    display: block;
+  }
+
+  .hero-stat-label {
+    font-size: 0.9rem;
+    opacity: 0.8;
+  }
+
+  .btn-hero {
+    background: white;
+    color: var(--primary-color);
+    padding: 1rem 2rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .btn-hero:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-xl);
+    color: var(--primary-color);
+  }
+
+  /* Sections */
+  section {
+    padding: 6rem 0;
+  }
+
+  .features {
+    background: white;
+  }
+
+  .feature-card {
+    background: white;
+    border-radius: 20px;
+    padding: 3rem 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(196, 147, 106, 0.1);
+    height: 100%;
+  }
+
+  .feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .feature-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+    font-size: 2rem;
+    color: white;
+  }
+
+  .products-showcase {
+    background: var(--bg-light);
+  }
+
+  .product-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(196, 147, 106, 0.1);
+    height: 100%;
+  }
+
+  .product-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .product-image {
+    height: 250px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .product-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(196, 147, 106, 0.9), rgba(139, 115, 85, 0.9));
+    opacity: 0;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .product-card:hover .product-overlay {
+    opacity: 1;
+  }
+
+  .product-content {
+    padding: 2rem;
+  }
+
+  .product-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: var(--accent-color);
+    color: var(--text-dark);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .calculator-section {
+    background: white;
+  }
+
+  .calculator-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid rgba(196, 147, 106, 0.1);
+    transition: all 0.3s ease;
+  }
+
+  .calculator-card:hover {
+    box-shadow: var(--shadow-xl);
+  }
+
+  .calculator-header {
+    background: var(--bg-gradient);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+
+  .btn-calculate {
+    background: var(--secondary-color);
+    border: none;
+    color: white;
+    padding: 0.875rem 2rem;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+
+  .btn-calculate:hover {
+    background: var(--secondary-dark);
+    transform: translateY(-2px);
+  }
+
+  #visualiser {
+    background: var(--bg-light);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-top: 2rem;
+  }
+
+  #visualiser-canvas {
+    border-radius: 15px;
+    box-shadow: var(--shadow-lg);
+    background: white;
+  }
+
+  .trust-signals {
+    padding: 4rem 0;
+    background: white;
+    border-top: 1px solid rgba(196, 147, 106, 0.1);
+  }
+
+  .trust-item {
+    text-align: center;
+    padding: 1rem;
+  }
+
+  .trust-icon {
+    font-size: 2.5rem;
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+  }
+
+  .contact-section {
+    padding: 6rem 0;
+    background: var(--text-dark);
+    color: white;
+  }
+
+  .contact-card {
+    background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 3rem 2rem;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 220px;
+  }
+  .contact-section .row {
+  align-items: stretch;
+  }
+
+  .contact-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--primary-color);
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 1.5rem;
+  }
+
+  /* Enhanced visualizer styles */
+  .pattern-selector {
+    background: var(--accent-color);
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+  }
+
+  .pattern-preview {
+    display: inline-block;
+    width: 60px;
+    height: 40px;
+    margin: 0 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: all 0.3s ease;
+  }
+
+  .pattern-preview:hover,
+  .pattern-preview.selected {
+    border-color: var(--primary-color);
+    transform: scale(1.1);
+  }
+
+  /* Animations */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .animate-on-scroll {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s ease;
+  }
+
+  .animate-on-scroll.animate {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .floating {
+  animation: float 3s ease-in-out infinite;
+  }
+
+  .image-gallery {
+  position: relative;
+  height: 500px;
+  }
+
+  .main-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 70%;
+  z-index: 4;
+  }
+
+  .secondary-image-1 {
+  position: absolute;
+  top: 20px;
+  right: 0;
+  width: 45%;
+  z-index: 3;
+  animation-delay: 0.5s;
+  }
+
+  .secondary-image-2 {
+  position: absolute;
+  bottom: 80px;
+  right: 20px;
+  width: 35%;
+  z-index: 2;
+  animation-delay: 1s;
+  }
+
+  .secondary-image-3 {
+  position: absolute;
+  bottom: 20px;
+  left: 60px;
+  width: 30%;
+  z-index: 1;
+  animation-delay: 1.5s;
+  }
+
+
+  @media (max-width: 768px) {
+    .hero-stats {
+      flex-direction: column;
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .hero h1 {
+      font-size: 2rem;
+    }
+
+    .hero .lead {
+      font-size: 1rem;
+    }
+
+    section {
+      padding: 4rem 0;
+    }
+
+    .feature-card, .calculator-card {
+      margin-bottom: 2rem;
+    }
+  }
+
+  /* Address Autocomplete Styling */
+.delivery-address-container {
+  position: relative;
+}
+
+/* Style the Google Places autocomplete dropdown */
+.pac-container {
+  border-radius: 10px !important;
+  border: 1px solid rgba(196, 147, 106, 0.2) !important;
+  box-shadow: var(--shadow-lg) !important;
+  font-family: 'Inter', sans-serif !important;
+  z-index: 9999 !important;
+  margin-top: 2px !important;
+}
+
+.pac-item {
+  padding: 12px 16px !important;
+  border-bottom: 1px solid rgba(196, 147, 106, 0.1) !important;
+  cursor: pointer !important;
+  font-size: 14px !important;
+}
+
+.pac-item:hover {
+  background: var(--bg-light) !important;
+}
+
+.pac-item-selected {
+  background: var(--primary-color) !important;
+  color: white !important;
+}
+
+.pac-matched {
+  font-weight: 600 !important;
+}
+
+.pac-icon {
+  display: none !important;
+}
+</style>
+
+
+<!-- Hero Section -->
+<section id="home" class="hero">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-6 hero-content">
+        <h1 class="animate-on-scroll">Transform Your Space with Premium Concrete Sleepers</h1>
+        <p class="lead animate-on-scroll">Australia's trusted partner for retaining wall solutions. Professional quality, competitive prices, expert guidance.</p>
+        <div class="animate-on-scroll">
+          <a href="#calculator" class="btn-hero me-3">
+            <i class="fas fa-calculator me-2"></i>Get Free Quote
+          </a>
+          <a href="#products" class="btn btn-outline-light btn-lg">
+            <i class="fas fa-eye me-2"></i>View Products
+          </a>
+        </div>
+        <div class="hero-stats animate-on-scroll">
+          <div class="hero-stat">
+            <span class="hero-stat-number">15+</span>
+            <span class="hero-stat-label">Years Experience</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat-number">5000+</span>
+            <span class="hero-stat-label">Projects Completed</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat-number">100%</span>
+            <span class="hero-stat-label">Satisfaction</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="image-gallery">
+          <div class="floating main-image">
+          <img src="{% static 'images/ashwood_main.jpg' %}" class="img-fluid rounded-4 shadow-lg" alt="Premium Concrete Sleepers">
+          </div>
+          <div class="floating secondary-image-1">
+          <img src="{% static 'images/blackwood_gallery2.jpg' %}" class="img-fluid rounded-4 shadow-lg" alt="Blackwood Sleepers">
+          </div>
+          <div class="floating secondary-image-2">
+          <img src="{% static 'images/cove_gallery3.jpg' %}" class="img-fluid rounded-4 shadow-lg" alt="Cove Installation">
+      </div>
+    <div class="floating secondary-image-3">
+      <img src="{% static 'images/lonsdale_gallery1.jpg' %}" class="img-fluid rounded-4 shadow-lg" alt="Lonsdale Project">
+    </div>
+  </div>
+</div>
+
+
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section id="about" class="features">
+  <div class="container">
+    <div class="text-center mb-5 animate-on-scroll">
+      <h2 class="display-4 fw-bold mb-4">Why Choose Fence Plinths?</h2>
+      <p class="lead text-muted">We deliver excellence in every aspect of your retaining wall project</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-lg-4 animate-on-scroll">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-shield-alt"></i>
+          </div>
+          <h4 class="fw-bold mb-3">Premium Quality</h4>
+          <p class="text-muted">High-grade concrete sleepers manufactured to Australian standards. Durable, weather-resistant, and built to last decades.</p>
+        </div>
+      </div>
+      <div class="col-lg-4 animate-on-scroll">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-tools"></i>
+          </div>
+          <h4 class="fw-bold mb-3">Expert Installation</h4>
+          <p class="text-muted">Professional installation services with experienced teams. We handle everything from planning to completion.</p>
+        </div>
+      </div>
+      <div class="col-lg-4 animate-on-scroll">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-calculator"></i>
+          </div>
+          <h4 class="fw-bold mb-3">Smart Calculator</h4>
+          <p class="text-muted">Advanced calculation tools provide instant, accurate quotes. Visualize your project before you build.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Products Showcase -->
+<section id="products" class="products-showcase">
+  <div class="container">
+    <div class="text-center mb-5 animate-on-scroll">
+      <h2 class="display-4 fw-bold mb-4">Our Premium Range</h2>
+      <p class="lead text-muted">Discover our extensive collection of concrete sleepers and retaining wall solutions</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-lg-4 col-md-6 animate-on-scroll">
+        <div class="product-card">
+          <div class="product-image" style="background-image: url('{% static 'images/ashwood_main.jpg' %}')">
+            <div class="product-badge">Popular</div>
+            <div class="product-overlay">
+              <a href="{% url 'product_detail' slug='ashwood' %}" class="btn btn-light btn-lg">
+                <i class="fas fa-eye me-2"></i>View Details
+              </a>
+            </div>
+          </div>
+          <div class="product-content">
+            <h5 class="fw-bold mb-3">Ashwood Series</h5>
+            <p class="text-muted mb-3">Premium concrete sleepers with natural wood grain texture. Perfect for residential and commercial projects.</p>
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="fw-bold" style="color: var(--primary-color)">From $45</span>
+              <a href="{% url 'product_detail' slug='ashwood' %}" class="btn" style="background: var(--primary-color); color: white;">Learn More</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6 animate-on-scroll">
+        <div class="product-card">
+          <div class="product-image" style="background-image: url('{% static 'images/blackwood_main.jpg' %}')">
+            <div class="product-badge">Premium</div>
+            <div class="product-overlay">
+              <a href="{% url 'product_detail' slug='blackwood' %}" class="btn btn-light btn-lg">
+                <i class="fas fa-eye me-2"></i>View Details
+              </a>
+            </div>
+          </div>
+          <div class="product-content">
+            <h5 class="fw-bold mb-3">Blackwood Series</h5>
+            <p class="text-muted mb-3">Sophisticated dark finish concrete sleepers. Ideal for modern architectural designs and luxury homes.</p>
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="fw-bold" style="color: var(--primary-color)">From $52</span>
+              <a href="{% url 'product_detail' slug='blackwood' %}" class="btn" style="background: var(--primary-color); color: white;">Learn More</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6 animate-on-scroll">
+        <div class="product-card">
+          <div class="product-image" style="background-image: url('{% static 'images/concrete_ufp_main.jpg' %}')">
+            <div class="product-badge">Versatile</div>
+            <div class="product-overlay">
+              <a href="{% url 'product_detail' slug='concrete-ufp' %}" class="btn btn-light btn-lg">
+                <i class="fas fa-eye me-2"></i>View Details
+              </a>
+            </div>
+          </div>
+          <div class="product-content">
+            <h5 class="fw-bold mb-3">Concrete UFP</h5>
+            <p class="text-muted mb-3">Under fence plinths for secure boundary solutions. Essential for privacy and structural integrity.</p>
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="fw-bold" style="color: var(--primary-color)">From $28.50</span>
+              <a href="{% url 'product_detail' slug='concrete-ufp' %}" class="btn" style="background: var(--primary-color); color: white;">Learn More</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="text-center mt-5">
+      <a href="{% url 'our_range' %}" class="btn btn-lg" style="background: var(--primary-color); color: white;">
+        <i class="fas fa-th-large me-2"></i>View All Products
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Calculator Section -->
+<section id="calculator" class="calculator-section">
+  <div class="container">
+    <div class="text-center mb-5 animate-on-scroll">
+      <h2 class="display-4 fw-bold mb-4">Smart Quote Calculator</h2>
+      <p class="lead text-muted">Get instant, accurate quotes for your retaining wall project</p>
+    </div>
+
+    <form method="post" id="quote-form">
+      {% csrf_token %}
+
+      <div class="row g-4">
+        <!-- Retaining Wall Calculator -->
+        <div class="col-lg-6 animate-on-scroll">
+          <div class="calculator-card h-100">
+            <div class="calculator-header">
+              <h4 class="mb-0"><i class="fas fa-layer-group me-2"></i>Retaining Wall Calculator</h4>
+            </div>
+            <div class="row g-3">
+              <div class="col-6">
+                <label class="form-label fw-semibold">Sleeper Length</label>
+                <select class="form-select" name="sleeper_length">
+                  <option value="2">2.0m</option>
+                  <option value="2.4">2.4m</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <label class="form-label fw-semibold">Sleeper Thickness</label>
+                <select class="form-select" name="sleeper_thickness">
+                  <option value="80">80mm</option>
+                  <option value="100">100mm</option>
+                  <option value="130">130mm</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold">Sleeper Style</label>
+                <select class="form-select" name="sleeper_style" id="sleeper_style_select">
+                  <option>Stackstone</option>
+                  <option>Woodgrain</option>
+                  <option>Rockface CHAR</option>
+                  <option>Rockface SAND</option>
+                  <option>Sandstone</option>
+                  <option>Charcoal</option>
+                  <option>Grey</option>
+                </select>
+
+                <!-- Pattern Preview -->
+                <div class="pattern-selector mt-3">
+                  <small class="fw-semibold d-block mb-2">Pattern Preview:</small>
+                  <div id="pattern-previews">
+                    <div class="pattern-preview" data-style="Stackstone" style="background-image: url('{% static 'images/ashwood_main.jpg' %}'); background-size: cover;"></div>
+                    <div class="pattern-preview" data-style="Woodgrain" style="background-image: url('{% static 'images/ashwood_gallery1.jpg' %}'); background-size: cover;"></div>
+                    <div class="pattern-preview" data-style="Rockface CHAR" style="background-image: url('{% static 'images/blackwood_main.jpg' %}'); background-size: cover;"></div>
+                    <div class="pattern-preview" data-style="Rockface SAND" style="background-image: url('{% static 'images/cove_main.jpg' %}'); background-size: cover;"></div>
+                    <div class="pattern-preview" data-style="Sandstone" style="background-image: url('{% static 'images/lonsdale_main.jpg' %}'); background-size: cover;"></div>
+                    <div class="pattern-preview" data-style="Charcoal" style="background-image: url('{% static 'images/blackwood_main.jpg' %}'); background-size: cover;"></div>
+                    <div class="pattern-preview" data-style="Grey" style="background-image: url('{% static 'images/concrete_ufp_main.jpg' %}'); background-size: cover;"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6">
+                <label class="form-label fw-semibold">Sleeper Brand</label>
+                <select class="form-select" name="sleeper_brand">
+                  <option>OS</option>
+                  <option>SC</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <label class="form-label fw-semibold">Wall Height (m)</label>
+                <input type="number" name="wall_height" class="form-control" step="0.01" placeholder="e.g. 1.2" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label fw-semibold">Wall Length (m)</label>
+                <input type="number" name="wall_length" class="form-control" step="0.01" placeholder="e.g. 10" required>
+              </div>
+              <div class="col-12 text-center">
+                <button type="button" id="calculate-retaining-wall" class="btn btn-calculate btn-lg">
+                  <i class="fas fa-calculator me-2"></i>Calculate Retaining Wall
+                </button>
+              </div>
+              <div id="retaining-result" class="mt-3"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Under Fence Plinth Calculator -->
+        <div class="col-lg-6 animate-on-scroll">
+          <div class="calculator-card h-100">
+            <div class="calculator-header">
+              <h4 class="mb-0"><i class="fas fa-fence me-2"></i>Under Fence Plinth Calculator</h4>
+            </div>
+            <div class="row g-3">
+              <div class="col-6">
+                <label class="form-label fw-semibold">Fence Length (m)</label>
+                <input type="number" name="fence_length" class="form-control" step="0.01" placeholder="e.g. 20">
+              </div>
+              <div class="col-6">
+                <label class="form-label fw-semibold">Plinths per Panel</label>
+                <select class="form-select" name="plinths_per_panel">
+                  <option value="1">1</option>
+                  <option value="2" selected>2</option>
+                  <option value="3">3</option>
+                </select>
+              </div>
+              <div class="col-12 text-center">
+                <button type="button" id="calculate-ufp" class="btn btn-calculate btn-lg">
+                  <i class="fas fa-calculator me-2"></i>Calculate UFP
+                </button>
+              </div>
+              <div id="ufp-result" class="mt-3"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="visualiser" class="animate-on-scroll">
+        <h5 class="text-center mb-4"><i class="fas fa-eye me-2"></i>Enhanced 3D Visualization</h5>
+        <div class="text-center">
+          <canvas id="visualiser-canvas" width="800" height="400"></canvas>
+        </div>
+        <div id="visualiser-legend" class="mt-3 text-center"></div>
+      </div>
+
+      <div class="row g-4 mt-5">
+  <div class="col-12">
+    <div class="calculator-card animate-on-scroll">
+      <div class="calculator-header">
+        <h4 class="mb-0"><i class="fas fa-user me-2"></i>Your Details</h4>
+      </div>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Full Name</label>
+          <input type="text" name="customer_name" class="form-control" placeholder="Enter your full name" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Email Address</label>
+          <input type="email" name="customer_email" class="form-control" placeholder="your@email.com" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Phone Number</label>
+          <input type="text" name="customer_phone" class="form-control" placeholder="0400 000 000" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Delivery Address</label>
+          <input type="text" name="delivery_address" id="delivery_address" class="form-control" placeholder="Start typing your address..." required autocomplete="off">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Postcode</label>
+          <input type="text" name="postcode" class="form-control" placeholder="5000" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Preferred Date</label>
+          <input type="date" name="date" class="form-control" required>
+        </div>
+        <!-- NEW CUSTOM MESSAGE FIELD -->
+        <div class="col-12">
+          <label class="form-label fw-semibold">
+            <i class="fas fa-comment-dots me-2"></i>Additional Notes or Requirements
+            <small class="text-muted">(Optional)</small>
+          </label>
+          <textarea
+            name="custom_message"
+            class="form-control"
+            rows="4"
+            placeholder="Tell us about any specific requirements, access issues, or other details that might help us provide a better quote..."
+            style="resize: vertical; min-height: 100px;">
+          </textarea>
+          <small class="form-text text-muted mt-1">
+            <i class="fas fa-info-circle me-1"></i>
+            Let us know about site access, soil conditions, specific finishes, timeline requirements, or any other details.
+          </small>
+        </div>
+      </div>
+
+      <input type="hidden" name="calculator_type" id="calculator_type">
+      <input type="hidden" name="calculated_results" id="calculated_results">
+
+      <div class="text-center mt-4">
+        <button type="submit" class="btn btn-lg px-5" style="background: var(--primary-color); color: white;">
+          <i class="fas fa-paper-plane me-2"></i>Submit Quote Request
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- Trust Signals -->
+<section class="trust-signals">
+  <div class="container">
+    <div class="row text-center">
+      <div class="col-lg-3 col-md-6 mb-4">
+        <div class="trust-item animate-on-scroll">
+          <i class="fas fa-shipping-fast trust-icon"></i>
+          <h5 class="fw-bold">Fast Delivery</h5>
+          <p class="text-muted">Same-day dispatch for metro Adelaide orders</p>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 mb-4">
+        <div class="trust-item animate-on-scroll">
+          <i class="fas fa-award trust-icon"></i>
+          <h5 class="fw-bold">Quality Guarantee</h5>
+          <p class="text-muted">Australian standards certified products</p>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 mb-4">
+        <div class="trust-item animate-on-scroll">
+          <i class="fas fa-headset trust-icon"></i>
+          <h5 class="fw-bold">Expert Support</h5>
+          <p class="text-muted">Professional guidance every step of the way</p>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 mb-4">
+        <div class="trust-item animate-on-scroll">
+          <i class="fas fa-dollar-sign trust-icon"></i>
+          <h5 class="fw-bold">Best Prices</h5>
+          <p class="text-muted">Competitive rates with no hidden costs</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Contact Section -->
+<section id="contact" class="contact-section">
+  <div class="container">
+    <div class="text-center mb-5 animate-on-scroll">
+      <h2 class="display-4 fw-bold mb-4">Get In Touch</h2>
+      <p class="lead">Ready to start your project? We're here to help make it happen.</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-lg-4 animate-on-scroll">
+        <div class="contact-card">
+          <div class="contact-icon">
+            <i class="fas fa-phone"></i>
+          </div>
+          <h5 class="fw-bold mb-3">Call Us</h5>
+          <p class="mb-0">0431 515 310</p>
+          <small class="text-muted">Mon-Fri 8AM-4PM, Sat 8AM-2PM</small>
+        </div>
+      </div>
+      <div class="col-lg-4 animate-on-scroll">
+        <div class="contact-card">
+          <div class="contact-icon">
+            <i class="fas fa-envelope"></i>
+          </div>
+          <h5 class="fw-bold mb-3">Email Us</h5>
+          <p class="mb-0">fenceplinths@gmail.com</p>
+          <small class="text-muted">Quick response guaranteed</small>
+        </div>
+      </div>
+      <div class="col-lg-4 animate-on-scroll">
+        <div class="contact-card">
+          <div class="contact-icon">
+            <i class="fas fa-map-marker-alt"></i>
+          </div>
+          <h5 class="fw-bold mb-3">Visit Us</h5>
+          <p class="mb-0">921 Old Port Wakefield Rd<br>Virginia, SA 5120</p>
+          <small class="text-muted">Servicing all of SA</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Factory Seconds Modal -->
+<div class="modal fade" id="factorySecondsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius: 20px; border: none;">
+      <div class="modal-header" style="background: var(--bg-gradient); color: white; border-radius: 20px 20px 0 0;">
+        <h5 class="modal-title"><i class="fas fa-star me-2"></i>Special Factory Seconds Available!</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center p-4">
+        <div class="mb-4">
+          <i class="fas fa-warehouse fa-3x mb-3" style="color: var(--primary-color);"></i>
+          <p class="lead">We stock a range of factory seconds at discounted prices!</p>
+          <p class="text-muted">Perfect for budget-conscious projects without compromising on quality.</p>
+        </div>
+        <div class="d-grid gap-2">
+          <a href="tel:0812345678" class="btn btn-lg" style="background: var(--primary-color); color: white;">
+            <i class="fas fa-phone me-2"></i>Call 0431 515 310
+          </a>
+          <a href="#calculator" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-calculator me-2"></i>Get Quote First
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Homepage specific JavaScript with enhanced pattern visualization
+document.addEventListener("DOMContentLoaded", function () {
+  console.log("🚀 Enhanced Homepage script loaded");
+
+  // Scroll animations
+  const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+  };
+
+  const observer = new IntersectionObserver(function(entries) {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('animate');
+      }
+    });
+  }, observerOptions);
+
+  document.querySelectorAll('.animate-on-scroll').forEach(el => {
+    observer.observe(el);
+  });
+
+  // Enhanced Canvas Setup
+  const canvas = document.getElementById("visualiser-canvas");
+  const ctx = canvas.getContext("2d");
+  const legendDiv = document.getElementById("visualiser-legend");
+
+  function resizeCanvas() {
+    const container = canvas.parentElement;
+    const containerWidth = container.clientWidth;
+    canvas.width = Math.min(containerWidth - 40, 800);
+    canvas.height = Math.max(400, canvas.width * 0.5);
+  }
+
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  // Enhanced Style mapping with multiple texture files
+  const styleMap = {
+  "Stackstone": "stackstone.jpg",
+  "Woodgrain": "woodgrain.jpg",
+  "Rockface CHAR": "rockface_charcoal.jpg",
+  "Rockface SAND": "rockface_sands.jpg",
+  "Sandstone": "plain_sandstone.jpg",
+  "Charcoal": "plain_charcoal.jpg",
+  "Grey": "plain_grey.jpg"
+};
+
+  // Pattern Preview Interaction
+  const patternPreviews = document.querySelectorAll('.pattern-preview');
+  const styleSelect = document.getElementById('sleeper_style_select');
+
+  // Initialize first pattern as selected
+  patternPreviews[0].classList.add('selected');
+
+  patternPreviews.forEach(preview => {
+    preview.addEventListener('click', function() {
+      // Remove selected class from all previews
+      patternPreviews.forEach(p => p.classList.remove('selected'));
+      // Add selected class to clicked preview
+      this.classList.add('selected');
+
+      // Update the select dropdown
+      const selectedStyle = this.dataset.style;
+      styleSelect.value = selectedStyle;
+
+      // Trigger recalculation if there are results
+      const retainingResult = document.getElementById('retaining-result');
+      if (retainingResult.innerHTML.trim()) {
+        calculateRetainingWall();
+      }
+    });
+  });
+
+  // Update pattern preview when dropdown changes
+  styleSelect.addEventListener('change', function() {
+    const selectedStyle = this.value;
+    patternPreviews.forEach(preview => {
+      preview.classList.remove('selected');
+      if (preview.dataset.style === selectedStyle) {
+        preview.classList.add('selected');
+      }
+    });
+  });
+
+  // Enhanced Calculator Functions
+  const calculateButton = document.getElementById("calculate-retaining-wall");
+  if (calculateButton) {
+    calculateButton.addEventListener("click", function () {
+      console.log("🖱️ Calculate button clicked");
+      calculateRetainingWall();
+    });
+  }
+
+  const calculateUfpButton = document.getElementById("calculate-ufp");
+  if (calculateUfpButton) {
+    calculateUfpButton.addEventListener("click", function () {
+      console.log("🖱️ UFP Calculate button clicked");
+      calculateUFP();
+    });
+  }
+
+  function calculateRetainingWall() {
+  const sleeper_length = parseFloat(document.querySelector('[name="sleeper_length"]').value);
+  const wall_length = parseFloat(document.querySelector('[name="wall_length"]').value);
+  const wall_height = parseFloat(document.querySelector('[name="wall_height"]').value);
+  const sleeper_thickness = parseInt(document.querySelector('[name="sleeper_thickness"]').value);
+  const sleeper_style = document.querySelector('[name="sleeper_style"]').value;
+  const sleeper_brand = document.querySelector('[name="sleeper_brand"]').value;
+
+  if (isNaN(sleeper_length) || isNaN(wall_length) || isNaN(wall_height)) {
+    showToast("Please enter valid dimensions", "warning");
+    return;
+  }
+
+  // Enhanced calculations
+  const wall_height_mm = wall_height * 1000;
+  const sleepers_per_section = Math.ceil(wall_height_mm / 200);
+  const sub_sections = Math.ceil(wall_length / sleeper_length);
+  const total_sleepers = sleepers_per_section * sub_sections;
+
+  // Steel calculations - separate I-beams and C-channels
+  const c_channels_required = 2; // Always 2 C channels (one at each end)
+  const i_beams_required = sub_sections - 1; // I-beams between each sleeper segment
+  const steel_height = (wall_height * 2).toFixed(2);
+
+  // Sleeper dimensions based on brand
+  let sleeper_height;
+  if (sleeper_brand === 'OS') {
+    sleeper_height = '75mm';
+  } else { // SC
+    sleeper_height = '80mm';
+  }
+
+  const sleeper_length_mm = sleeper_length * 1000;
+  const sleeper_dimensions = `${sleeper_length_mm}x200x${sleeper_height}`;
+
+  // Pricing
+  const sleeper_price = 50;
+  const i_beam_price = 85;
+  const c_channel_price = 75;
+
+  const sleepers_cost = total_sleepers * sleeper_price;
+  const i_beams_cost = i_beams_required * i_beam_price;
+  const c_channels_cost = c_channels_required * c_channel_price;
+  const total_cost = sleepers_cost + i_beams_cost + c_channels_cost;
+
+  const formatted_length = sleeper_length === 2 ? '2.0m' : '2.4m';
+
+  // Enhanced results HTML with separate steel components
+  const result = `
+    <div class="calculation-results">
+      <div class="alert alert-success" role="alert">
+        <h5 class="alert-heading"><i class="fas fa-check-circle me-2"></i>Calculation Complete!</h5>
+        <hr>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="card border-success">
+              <div class="card-body text-center">
+                <i class="fas fa-layer-group fa-2x text-success mb-2"></i>
+                <h6 class="card-title">Concrete Sleepers</h6>
+                <p class="mb-1"><strong>Quantity:</strong> ${total_sleepers}</p>
+                <p class="mb-1"><strong>Dimensions:</strong> ${sleeper_dimensions}</p>
+                <p class="mb-1"><strong>Style:</strong> ${sleeper_style}</p>
+                <p class="mb-1"><strong>Brand:</strong> ${sleeper_brand}</p>
+                <p class="mb-3"><strong>Cost:</strong> $${sleepers_cost.toLocaleString()}</p>
+                <button type="button" class="btn btn-success btn-sm w-100"
+                        onclick="addCalculatedSleeperToCart(${total_sleepers}, '${formatted_length}', '${sleeper_height}', '${sleeper_style}', '${sleeper_brand}')">
+                  <i class="fas fa-cart-plus me-1"></i>Add to Cart
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card" style="border-color: var(--primary-color);">
+              <div class="card-body text-center">
+                <i class="fas fa-tools fa-2x mb-2" style="color: var(--primary-color);"></i>
+                <h6 class="card-title">I-Beams (120UB65)</h6>
+                <p class="mb-1"><strong>Quantity:</strong> ${i_beams_required}</p>
+                <p class="mb-1"><strong>Height:</strong> ${steel_height}m</p>
+                <p class="mb-1"><strong>Purpose:</strong> Between segments</p>
+                <p class="mb-3"><strong>Cost:</strong> $${i_beams_cost.toLocaleString()}</p>
+                <button type="button" class="btn btn-sm w-100" style="background: var(--primary-color); color: white;"
+                        onclick="addCalculatedIBeamsToCart(${i_beams_required}, '${steel_height}m')">
+                  <i class="fas fa-cart-plus me-1"></i>Add to Cart
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card" style="border-color: var(--secondary-color);">
+              <div class="card-body text-center">
+                <i class="fas fa-grip-lines-vertical fa-2x mb-2" style="color: var(--secondary-color);"></i>
+                <h6 class="card-title">C-Channels (125x65)</h6>
+                <p class="mb-1"><strong>Quantity:</strong> ${c_channels_required}</p>
+                <p class="mb-1"><strong>Height:</strong> ${steel_height}m</p>
+                <p class="mb-1"><strong>Purpose:</strong> End posts</p>
+                <p class="mb-3"><strong>Cost:</strong> $${c_channels_cost.toLocaleString()}</p>
+                <button type="button" class="btn btn-sm w-100" style="background: var(--secondary-color); color: white;"
+                        onclick="addCalculatedCChannelsToCart(${c_channels_required}, '${steel_height}m')">
+                  <i class="fas fa-cart-plus me-1"></i>Add to Cart
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="text-center mt-4">
+          <div class="alert" style="background-color: var(--accent-color); border-color: var(--primary-color); color: var(--text-dark);">
+            <h4 class="mb-0"><i class="fas fa-calculator me-2"></i>Total Estimated Cost: $${total_cost.toLocaleString()}</h4>
+          </div>
+          <button type="button" class="btn btn-lg" style="background: var(--secondary-color); color: white;"
+                  onclick="addCompleteRetainingSetToCart(${total_sleepers}, '${formatted_length}', '${sleeper_height}', '${sleeper_style}', '${sleeper_brand}', ${i_beams_required}, ${c_channels_required}, '${steel_height}m')">
+            <i class="fas fa-shopping-cart me-2"></i>Add Complete Set to Cart
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("retaining-result").innerHTML = result;
+  document.getElementById("calculator_type").value = "retaining_wall";
+  document.getElementById("calculated_results").value = `Sleepers: ${total_sleepers}, I-Beams: ${i_beams_required}, C-Channels: ${c_channels_required}, Total: $${total_cost}`;
+
+  // Draw enhanced visualization
+  drawWallVisualization(sleeper_style, wall_length, wall_height, sleepers_per_section, sub_sections, i_beams_required + c_channels_required, sleeper_thickness, total_sleepers);
+
+  showToast("Calculation completed successfully!", "success");
+}
+
+  function calculateUFP() {
+    const fence_length = parseFloat(document.querySelector('[name="fence_length"]').value);
+    const plinths_per_panel = parseInt(document.querySelector('[name="plinths_per_panel"]').value);
+
+    if (isNaN(fence_length) || fence_length <= 0) {
+      showToast("Please enter a valid fence length", "warning");
+      return;
+    }
+
+    const panels_required = Math.ceil(fence_length / 2.35);
+    const total_plinths = panels_required * plinths_per_panel;
+    const plinth_price = 28.50;
+    const total_ufp_cost = total_plinths * plinth_price;
+
+    const ufpResult = `
+      <div class="calculation-results">
+        <div class="alert alert-success" role="alert">
+          <h5 class="alert-heading"><i class="fas fa-check-circle me-2"></i>UFP Calculation Complete!</h5>
+          <hr>
+          <div class="card" style="border-color: var(--secondary-color);">
+            <div class="card-body text-center">
+              <i class="fas fa-fence fa-2x mb-2" style="color: var(--secondary-color);"></i>
+              <h6 class="card-title">Concrete UFP Plinths</h6>
+              <p class="mb-1"><strong>Fence Length:</strong> ${fence_length}m</p>
+              <p class="mb-1"><strong>Panels Required:</strong> ${panels_required}</p>
+              <p class="mb-1"><strong>Plinths per Panel:</strong> ${plinths_per_panel}</p>
+              <p class="mb-1"><strong>Total Plinths:</strong> ${total_plinths}</p>
+              <p class="mb-3"><strong>Total Cost:</strong> ${total_ufp_cost.toFixed(2)}</p>
+              <button type="button" class="btn w-100" style="background: var(--secondary-color); color: white;"
+                      onclick="addCalculatedUfpToCart(${total_plinths})">
+                <i class="fas fa-cart-plus me-1"></i>Add ${total_plinths} UFP Plinths to Cart
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById("ufp-result").innerHTML = ufpResult;
+    showToast("UFP calculation completed successfully!", "success");
+  }
+
+  // REPLACE the drawWallVisualization function in your homepage.html with this updated version:
+
+// REPLACE the drawWallVisualization function with this enhanced version:
+
+function drawWallVisualization(sleeper_style, wall_length, wall_height, sleepers_per_section, sub_sections, steel_posts_required, sleeper_thickness, total_sleepers) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const padding = Math.min(canvas.width * 0.12, canvas.height * 0.12, 80);
+  const labelSpace = 80;
+  const availableWidth = canvas.width - padding * 2;
+  const availableHeight = canvas.height - padding * 2 - labelSpace;
+
+  const wallAspectRatio = wall_length / wall_height;
+  const canvasAspectRatio = availableWidth / availableHeight;
+
+  let scaledWallWidth, scaledWallHeight;
+
+  if (wallAspectRatio > canvasAspectRatio) {
+    scaledWallWidth = availableWidth;
+    scaledWallHeight = availableWidth / wallAspectRatio;
+  } else {
+    scaledWallHeight = availableHeight;
+    scaledWallWidth = availableHeight * wallAspectRatio;
+  }
+
+  const scale = scaledWallWidth / wall_length;
+  const startX = (canvas.width - scaledWallWidth) / 2;
+  const startY = padding + 10;
+
+  // Map styles to your actual pattern images (UPDATED with correct file names)
+  const patternImages = {
+    "Stackstone": "images/stackstone.jpg",
+    "Woodgrain": "images/woodgrain.jpg",
+    "Rockface CHAR": "images/rockface_charcoal.jpg",
+    "Rockface SAND": "images/rockface_sandstone.jpg",
+    "Sandstone": "images/plain_sandstone.jpg",
+    "Charcoal": "images/plain_charcoal.jpg",
+    "Grey": "images/plain_grey.jpg"
+  };
+
+  // Load the actual pattern image
+  const patternImg = new Image();
+  patternImg.crossOrigin = "anonymous";
+  patternImg.src = STATIC_URL + (patternImages[sleeper_style] || patternImages["Stackstone"]);
+
+  patternImg.onload = function() {
+    drawIndividualSleeperWall();
+    drawPosts();
+    drawDimensions();
+    updateLegend();
+  };
+
+  patternImg.onerror = function() {
+    console.warn(`Could not load pattern image for ${sleeper_style}, using fallback`);
+    drawFallbackWall();
+    drawPosts();
+    drawDimensions();
+    updateLegend();
+  };
+
+  function drawIndividualSleeperWall() {
+    const sleeperWidth = scaledWallWidth / sub_sections;
+    const sleeperHeight = scaledWallHeight / sleepers_per_section;
+
+    // Calculate sleeper counter for variation
+    let sleeperCounter = 0;
+
+    for (let section = 0; section < sub_sections; section++) {
+      for (let course = 0; course < sleepers_per_section; course++) {
+        const x = startX + (section * sleeperWidth);
+        const y = startY + ((sleepers_per_section - 1 - course) * sleeperHeight);
+
+        // Draw individual sleeper with unique pattern positioning
+        drawIndividualSleeper(x, y, sleeperWidth, sleeperHeight, sleeperCounter);
+        sleeperCounter++;
+      }
+    }
+  }
+
+  function drawIndividualSleeper(x, y, width, height, sleeperIndex) {
+    // Save the canvas state
+    ctx.save();
+
+    // Create clipping region for this specific sleeper
+    ctx.beginPath();
+    ctx.rect(x, y, width, height);
+    ctx.clip();
+
+    // FIXED: Scale the pattern to fit each individual sleeper completely
+    // Each sleeper gets the full pattern image scaled to fit its dimensions
+    ctx.drawImage(
+        patternImg,
+        x,                    // Draw at sleeper's exact position
+        y,                    // Draw at sleeper's exact position
+        width,                // Scale to sleeper's exact width
+        height                // Scale to sleeper's exact height
+    );
+
+    // Restore canvas state (removes clipping)
+    ctx.restore();
+
+    // Add sleeper border and depth
+    drawSleeperBorderAndDepth(x, y, width, height);
+}
+
+  function drawSleeperBorderAndDepth(x, y, width, height) {
+    // Main border
+    ctx.strokeStyle = "#2d3748";
+    ctx.lineWidth = Math.max(1, scale * 0.01);
+    ctx.strokeRect(x, y, width, height);
+
+    // Inner shadow for depth
+    ctx.strokeStyle = "rgba(0,0,0,0.3)";
+    ctx.lineWidth = Math.max(0.5, scale * 0.005);
+    ctx.strokeRect(x + 1, y + 1, width - 2, height - 2);
+
+    // Highlight edge for 3D effect
+    ctx.strokeStyle = "rgba(255,255,255,0.2)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + width, y);
+    ctx.moveTo(x, y);
+    ctx.lineTo(x, y + height);
+    ctx.stroke();
+
+    // Bottom/right shadow for 3D effect
+    ctx.strokeStyle = "rgba(0,0,0,0.4)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x + width, y);
+    ctx.lineTo(x + width, y + height);
+    ctx.moveTo(x, y + height);
+    ctx.lineTo(x + width, y + height);
+    ctx.stroke();
+  }
+
+  function drawFallbackWall() {
+    // Enhanced fallback with better individual sleeper rendering
+    const sleeperWidth = scaledWallWidth / sub_sections;
+    const sleeperHeight = scaledWallHeight / sleepers_per_section;
+
+    // Style-based colors as fallback
+    const styleColors = {
+      "Stackstone": "#8B7355",
+      "Woodgrain": "#7B6345",
+      "Rockface CHAR": "#3A3A3A",
+      "Rockface SAND": "#C4936A",
+      "Sandstone": "#D4A57A",
+      "Charcoal": "#2D2D2D",
+      "Grey": "#808080"
+    };
+
+    const baseColor = styleColors[sleeper_style] || styleColors["Stackstone"];
+
+    for (let section = 0; section < sub_sections; section++) {
+      for (let course = 0; course < sleepers_per_section; course++) {
+        const x = startX + (section * sleeperWidth);
+        const y = startY + ((sleepers_per_section - 1 - course) * sleeperHeight);
+
+        // Create unique gradient for each sleeper
+        const gradient = ctx.createLinearGradient(
+          x + (section % 2) * 20,
+          y + (course % 2) * 15,
+          x + sleeperWidth,
+          y + sleeperHeight
+        );
+        gradient.addColorStop(0, baseColor);
+        gradient.addColorStop(0.5, baseColor + "DD");
+        gradient.addColorStop(1, baseColor + "AA");
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(x, y, sleeperWidth, sleeperHeight);
+
+        // Add individual sleeper depth
+        drawSleeperBorderAndDepth(x, y, sleeperWidth, sleeperHeight);
+      }
+    }
+  }
+
+  function drawPosts() {
+    const postWidth = Math.max(8, scale * 0.1);
+    const postSpacing = scaledWallWidth / (steel_posts_required - 1);
+
+    for (let i = 0; i < steel_posts_required; i++) {
+      const x = startX + (i * postSpacing) - (postWidth / 2);
+
+      // Enhanced post rendering with better 3D effect
+      const gradient = ctx.createLinearGradient(x, startY, x + postWidth, startY);
+      gradient.addColorStop(0, '#4A5568');
+      gradient.addColorStop(0.3, '#718096');
+      gradient.addColorStop(0.7, '#2D3748');
+      gradient.addColorStop(1, '#1A202C');
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(x, startY, postWidth, scaledWallHeight);
+
+      // Galvanized steel highlight
+      ctx.fillStyle = '#E2E8F0';
+      ctx.fillRect(x, startY, 2, scaledWallHeight);
+
+      // Post shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.fillRect(x + postWidth - 1, startY, 1, scaledWallHeight);
+
+      // Post label
+      ctx.fillStyle = '#2D3748';
+      ctx.font = `${Math.max(10, scale * 0.02)}px Inter`;
+      ctx.textAlign = 'center';
+      ctx.fillText('POST', x + postWidth/2, startY - 8);
+    }
+  }
+
+  function drawDimensions() {
+    ctx.fillStyle = '#2D3748';
+    ctx.font = `${Math.max(14, canvas.width * 0.018)}px Inter`;
+    ctx.textAlign = 'center';
+
+    const lengthLabelY = startY + scaledWallHeight + 60;
+    ctx.fillText(`${wall_length}m length`, canvas.width / 2, lengthLabelY);
+
+    ctx.strokeStyle = '#C4936A';
+    ctx.lineWidth = 3;
+    const lengthLineY = startY + scaledWallHeight + 35;
+    ctx.beginPath();
+    ctx.moveTo(startX, lengthLineY);
+    ctx.lineTo(startX + scaledWallWidth, lengthLineY);
+    ctx.stroke();
+
+    drawArrow(ctx, startX + 15, lengthLineY, startX, lengthLineY);
+    drawArrow(ctx, startX + scaledWallWidth - 15, lengthLineY, startX + scaledWallWidth, lengthLineY);
+
+    const heightLabelX = Math.max(30, startX - 40);
+    ctx.save();
+    ctx.translate(heightLabelX, startY + scaledWallHeight / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText(`${wall_height}m high`, 0, 0);
+    ctx.restore();
+
+    const heightLineX = Math.max(45, startX - 25);
+    ctx.beginPath();
+    ctx.moveTo(heightLineX, startY);
+    ctx.lineTo(heightLineX, startY + scaledWallHeight);
+    ctx.stroke();
+
+    drawArrow(ctx, heightLineX, startY + 15, heightLineX, startY);
+    drawArrow(ctx, heightLineX, startY + scaledWallHeight - 15, heightLineX, startY + scaledWallHeight);
+  }
+
+  function updateLegend() {
+    legendDiv.innerHTML = `
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div class="card border-success">
+            <div class="card-body text-center">
+              <i class="fas fa-layer-group fa-2x text-success mb-2"></i>
+              <h6>Wall Configuration</h6>
+              <small><strong>${total_sleepers}</strong> individual sleepers (${sleepers_per_section} courses × ${sub_sections} sections)</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card" style="border-color: var(--primary-color);">
+            <div class="card-body text-center">
+              <i class="fas fa-tools fa-2x mb-2" style="color: var(--primary-color);"></i>
+              <h6>Steel Framework</h6>
+              <small><strong>${steel_posts_required}</strong> posts × ${steel_type} (${(wall_height * 2).toFixed(1)}m height)</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card" style="border-color: var(--secondary-color);">
+            <div class="card-body text-center">
+              <i class="fas fa-palette fa-2x mb-2" style="color: var(--secondary-color);"></i>
+              <h6>Style & Finish</h6>
+              <small><strong>${sleeper_style}</strong> finish, ${sleeper_thickness}mm thickness</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+}
+
+  function drawArrow(ctx, fromX, fromY, toX, toY) {
+    const headlen = 10;
+    const dx = toX - fromX;
+    const dy = toY - fromY;
+    const angle = Math.atan2(dy, dx);
+
+    ctx.strokeStyle = '#C4936A';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(toX, toY);
+    ctx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
+    ctx.moveTo(toX, toY);
+    ctx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
+    ctx.stroke();
+  }
+
+  // Show factory seconds modal with delay
+  setTimeout(() => {
+    if (!sessionStorage.getItem("factorySecondsShown")) {
+      const modal = new bootstrap.Modal(document.getElementById('factorySecondsModal'));
+      modal.show();
+      sessionStorage.setItem("factorySecondsShown", "true");
+    }
+  }, 3000);
+
+  // Enhanced Toast Function
+  function showToast(message, type = 'info') {
+    // Create toast container if it doesn't exist
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+      toastContainer = document.createElement('div');
+      toastContainer.id = 'toast-container';
+      toastContainer.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+      `;
+      document.body.appendChild(toastContainer);
+    }
+
+    // Create toast element
+    const toast = document.createElement('div');
+    const bgColor = type === 'success' ? 'var(--secondary-color)' :
+                   type === 'warning' ? '#f59e0b' :
+                   type === 'error' ? '#ef4444' : 'var(--primary-color)';
+
+    toast.style.cssText = `
+      background: ${bgColor};
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      opacity: 0;
+      transform: translateX(100%);
+      transition: all 0.3s ease;
+      max-width: 300px;
+      word-wrap: break-word;
+    `;
+    toast.textContent = message;
+
+    toastContainer.appendChild(toast);
+
+    // Animate in
+    setTimeout(() => {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateX(0)';
+    }, 10);
+
+    // Animate out and remove
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(100%)';
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.parentNode.removeChild(toast);
+        }
+      }, 300);
+    }, 3000);
+  }
+
+  // Make showToast globally available
+  window.showToast = showToast;
+});
+
+// Enhanced Add to Cart Functions
+function addCalculatedSleeperToCart(quantity, length, thickness, style, brand) {
+  console.log("🔧 Adding sleepers:", {quantity, length, thickness, style, brand});
+
+  // Map style + length + thickness to your actual database product IDs
+  let productId = null;
+
+  // Determine length type
+  const is2000mm = (length === '2.0m' || length === '2m' || length === '2000mm');
+  const is2400mm = (length === '2.4m' || length === '2400mm');
+
+  // Map styles to product IDs based on your database
+  if (style === 'Stackstone') {
+    if (is2000mm) {
+      productId = thickness === '80mm' ? 4 : thickness === '100mm' ? 5 : 6; // 130mm
+    } else if (is2400mm) {
+      productId = thickness === '80mm' ? 34 : thickness === '100mm' ? 35 : 36; // 130mm
+    }
+  } else if (style === 'Woodgrain') {
+    if (is2000mm) {
+      productId = thickness === '80mm' ? 7 : thickness === '100mm' ? 8 : 9; // 130mm
+    } else if (is2400mm) {
+      productId = thickness === '80mm' ? 37 : thickness === '100mm' ? 38 : 39; // 130mm
+    }
+  } else if (style === 'Rockface CHAR') {
+    if (is2000mm) {
+      productId = thickness === '80mm' ? 10 : thickness === '100mm' ? 11 : 12; // 130mm
+    } else if (is2400mm) {
+      productId = thickness === '80mm' ? 40 : thickness === '100mm' ? 41 : 42; // 130mm
+    }
+  } else if (style === 'Rockface SAND') {
+    if (is2000mm) {
+      productId = thickness === '80mm' ? 13 : thickness === '100mm' ? 14 : 15; // 130mm
+    } else if (is2400mm) {
+      productId = thickness === '80mm' ? 43 : thickness === '100mm' ? 44 : 45; // 130mm
+    }
+  } else if (style === 'Sandstone') {
+    if (is2000mm) {
+      productId = thickness === '80mm' ? 16 : thickness === '100mm' ? 17 : 18; // 130mm
+    } else if (is2400mm) {
+      productId = thickness === '80mm' ? 46 : thickness === '100mm' ? 47 : 48; // 130mm
+    }
+  } else if (style === 'Charcoal') {
+    if (is2000mm) {
+      productId = thickness === '80mm' ? 19 : thickness === '100mm' ? 20 : 21; // 130mm
+    } else if (is2400mm) {
+      productId = thickness === '80mm' ? 49 : thickness === '100mm' ? 50 : 51; // 130mm
+    }
+  } else if (style === 'Grey') {
+    if (is2000mm) {
+      productId = thickness === '80mm' ? 22 : thickness === '100mm' ? 23 : 24; // 130mm
+    } else if (is2400mm) {
+      productId = thickness === '80mm' ? 52 : thickness === '100mm' ? 53 : 54; // 130mm
+    }
+  }
+
+  // Default fallback
+  if (!productId) {
+    console.warn(`Could not find product ID for style: ${style}, length: ${length}, thickness: ${thickness}`);
+    productId = 4; // Default to Stackstone 2000x200x80mm
+  }
+
+  console.log(`Selected product ID: ${productId} for ${style} ${length} ${thickness}`);
+
+  const formData = new FormData();
+  formData.append('quantity', quantity);
+
+  fetch(`/add-to-cart/${productId}/`, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': getCookie('csrftoken'),
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      showToast(`Added ${quantity} ${style} sleepers to cart!`, 'success');
+    } else {
+      showToast('Failed to add sleepers to cart: ' + (data.error || 'Unknown error'), 'error');
+      console.error('Add to cart error:', data);
+    }
+  })
+  .catch(err => {
+    console.error("❌ Error:", err);
+    showToast('Error adding sleepers to cart: ' + err.message, 'error');
+  });
+}
+
+function addCalculatedPostsToCart(quantity, type, height) {
+  console.log("🔧 Adding posts:", {quantity, type, height});
+
+  // Map post types to your actual database product IDs
+  let productId;
+
+  if (type === '150UB/150C' || type.includes('150')) {
+    productId = 111; // H-Post 2.0m Galvanized Steel
+  } else {
+    productId = 110; // C-Post 1.8m Galvanized Steel (default)
+  }
+
+  console.log(`Selected post product ID: ${productId} for type: ${type}`);
+
+  const formData = new FormData();
+  formData.append('quantity', quantity);
+
+  fetch(`/add-to-cart/${productId}/`, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': getCookie('csrftoken'),
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      showToast(`Added ${quantity} steel posts to cart!`, 'success');
+    } else {
+      showToast('Failed to add posts to cart: ' + (data.error || 'Unknown error'), 'error');
+      console.error('Add to cart error:', data);
+    }
+  })
+  .catch(err => {
+    console.error("❌ Error:", err);
+    showToast('Error adding posts to cart: ' + err.message, 'error');
+  });
+}
+
+function addCompleteSetToCart(sleeperQty, length, thickness, style, brand, postQty, postType, height) {
+  console.log("🔧 Adding complete set:", arguments);
+
+  // Add sleepers first
+  addCalculatedSleeperToCart(sleeperQty, length, thickness, style, brand);
+
+  // Add posts after a short delay
+  setTimeout(() => {
+    addCalculatedPostsToCart(postQty, postType, height);
+    setTimeout(() => {
+      showToast(`Complete retaining wall set added to cart!`, 'success');
+    }, 500);
+  }, 1000);
+}
+
+function addCalculatedUfpToCart(quantity) {
+  console.log("🔧 Adding UFP plinths:", { quantity });
+
+  // Use standard UFP product - Good Neighbour 2340x100x50 [CHAR]
+  const ufpProductId = 67; // SC UFP Good 2340x100x50 [CHAR]
+
+  console.log(`Selected UFP product ID: ${ufpProductId}`);
+
+  const formData = new FormData();
+  formData.append('quantity', quantity);
+
+  fetch(`/add-to-cart/${ufpProductId}/`, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': getCookie('csrftoken'),
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      showToast(`Added ${quantity} UFP plinths to cart!`, 'success');
+    } else {
+      showToast('Failed to add UFP plinths to cart: ' + (data.error || 'Unknown error'), 'error');
+      console.error('Add to cart error:', data);
+    }
+  })
+  .catch(err => {
+    console.error("❌ Error:", err);
+    showToast('Error adding UFP plinths to cart: ' + err.message, 'error');
+  });
+}
+
+// Helper function to get CSRF token
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+// Google Places Autocomplete Initialization
+let autocomplete;
+
+function initMap() {
+  console.log("🗺️ Initializing Google Places Autocomplete");
+  initializeAutocomplete();
+}
+
+function initializeAutocomplete() {
+  const addressInput = document.getElementById('delivery_address');
+
+  if (!addressInput) {
+    console.log("Address input not found, retrying...");
+    setTimeout(initializeAutocomplete, 500);
+    return;
+  }
+
+  if (typeof google !== 'undefined' && google.maps && google.maps.places) {
+    console.log("✅ Google Places API loaded successfully");
+
+    autocomplete = new google.maps.places.Autocomplete(addressInput, {
+      types: ['address'],
+      componentRestrictions: { country: 'AU' }, // Restrict to Australia only
+      fields: ['formatted_address', 'geometry', 'address_components']
+    });
+
+    // Listen for when user selects an address
+    autocomplete.addListener('place_changed', function() {
+      const place = autocomplete.getPlace();
+      console.log("📍 Address selected:", place);
+
+      if (place.formatted_address) {
+        addressInput.value = place.formatted_address;
+
+        // Auto-fill postcode if available
+        const postcodeInput = document.querySelector('[name="postcode"]');
+        if (postcodeInput && place.address_components) {
+          const postcodeComponent = place.address_components.find(component =>
+            component.types.includes('postal_code')
+          );
+
+          if (postcodeComponent) {
+            postcodeInput.value = postcodeComponent.long_name;
+            console.log("📮 Auto-filled postcode:", postcodeComponent.long_name);
+          }
+        }
+
+        showToast('Address selected successfully!', 'success');
+      }
+    });
+
+  } else {
+    console.log("❌ Google Places API not loaded yet, retrying...");
+    setTimeout(initializeAutocomplete, 500);
+  }
+}
+
+// Also try to initialize when the page is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  console.log("🚀 Page loaded, checking for Google API...");
+
+  // Wait a bit for Google API to load
+  setTimeout(() => {
+    if (typeof google === 'undefined') {
+      console.log("⏳ Google API still loading...");
+    } else {
+      initializeAutocomplete();
+    }
+  }, 1000);
+});
+// I-Beam add to cart function
+function addCalculatedIBeamsToCart(quantity, height) {
+  console.log("🔧 Adding I-beams:", {quantity, height});
+
+  // Use a standard I-beam product ID (you'll need to create this product)
+  const ibeamProductId = 120; // Update this with your actual I-beam product ID
+
+  const formData = new FormData();
+  formData.append('quantity', quantity);
+
+  fetch(`/add-to-cart/${ibeamProductId}/`, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': getCookie('csrftoken'),
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      showToast(`Added ${quantity} I-beams (${height}) to cart!`, 'success');
+    } else {
+      showToast('Failed to add I-beams to cart: ' + (data.error || 'Unknown error'), 'error');
+      console.error('Add to cart error:', data);
+    }
+  })
+  .catch(err => {
+    console.error("❌ Error:", err);
+    showToast('Error adding I-beams to cart: ' + err.message, 'error');
+  });
+}
+
+// C-Channel add to cart function
+function addCalculatedCChannelsToCart(quantity, height) {
+  console.log("🔧 Adding C-channels:", {quantity, height});
+
+  // Use a standard C-channel product ID (you'll need to create this product)
+  const cchannelProductId = 121; // Update this with your actual C-channel product ID
+
+  const formData = new FormData();
+  formData.append('quantity', quantity);
+
+  fetch(`/add-to-cart/${cchannelProductId}/`, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': getCookie('csrftoken'),
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      showToast(`Added ${quantity} C-channels (${height}) to cart!`, 'success');
+    } else {
+      showToast('Failed to add C-channels to cart: ' + (data.error || 'Unknown error'), 'error');
+      console.error('Add to cart error:', data);
+    }
+  })
+  .catch(err => {
+    console.error("❌ Error:", err);
+    showToast('Error adding C-channels to cart: ' + err.message, 'error');
+  });
+}
+
+// Complete retaining set add to cart function
+function addCompleteRetainingSetToCart(sleeperQty, length, thickness, style, brand, ibeamQty, cchannelQty, height) {
+  console.log("🔧 Adding complete retaining set:", arguments);
+
+  // Add sleepers first
+  addCalculatedSleeperToCart(sleeperQty, length, thickness, style, brand);
+
+  // Add I-beams after a short delay
+  setTimeout(() => {
+    if (ibeamQty > 0) {
+      addCalculatedIBeamsToCart(ibeamQty, height);
+    }
+  }, 500);
+
+  // Add C-channels after another delay
+  setTimeout(() => {
+    if (cchannelQty > 0) {
+      addCalculatedCChannelsToCart(cchannelQty, height);
+    }
+  }, 1000);
+
+  // Show final success message
+  setTimeout(() => {
+    showToast(`Complete retaining wall set added to cart!`, 'success');
+  }, 1500);
+}
+
+
+
+</script>
+{% endblock %}

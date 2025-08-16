@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Request a Quote</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  .canvas-container {
+      text-align: center;
+      margin: 20px 0;
+  }
+</style>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const lengthInput = document.querySelector('input[name="length"]');
+  const heightInput = document.querySelector('input[name="height"]');
+  const estimateDiv = document.getElementById('estimate');
+  const notesField = document.getElementById('notes');
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+
+  const sleeper_length = 2.0;
+  const sleeper_height = 0.2;
+  const sleeper_price = 50;
+  const post_price = 30;
+
+  function update() {
+    const length = parseFloat(lengthInput.value);
+    const height = parseFloat(heightInput.value);
+    if (!length || !height) {
+      estimateDiv.textContent = 'Enter wall length & height to see estimate.';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      notesField.value = '';
+      return;
+    }
+
+    const rows = Math.ceil(height / sleeper_height);
+    const sleepers_per_row = Math.ceil(length / sleeper_length);
+    const sleepers_needed = rows * sleepers_per_row;
+    const posts_needed = sleepers_per_row + 1;
+    const price = sleepers_needed * sleeper_price + posts_needed * post_price;
+
+    const result = `
+      Estimate:
+      Rows: ${rows}
+      Sleepers per row: ${sleepers_per_row}
+      Total Sleepers: ${sleepers_needed}
+      Posts: ${posts_needed}
+      Estimated Price: $${price}
+    `;
+
+    estimateDiv.innerHTML = result.replace(/\n/g, "<br>");
+    notesField.value = result.trim();
+
+    drawWall(rows, sleepers_per_row);
+  }
+
+  function drawWall(rows, cols) {
+    const scale = 40;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const wallWidth = cols * sleeper_length * scale / 2;
+    const wallHeight = rows * sleeper_height * scale;
+
+    const offsetX = (canvas.width - wallWidth) / 2;
+    const offsetY = canvas.height - 50;
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const x = offsetX + c * sleeper_length * scale / 2;
+        const y = offsetY - (r+1) * sleeper_height * scale;
+        ctx.fillStyle = "grey";
+        ctx.fillRect(x, y, sleeper_length * scale / 2, sleeper_height * scale);
+        ctx.strokeRect(x, y, sleeper_length * scale / 2, sleeper_height * scale);
+      }
+    }
+
+    for (let c = 0; c <= cols; c++) {
+      const x = offsetX + c * sleeper_length * scale / 2 - 2;
+      const y = offsetY - wallHeight;
+      ctx.fillStyle = "brown";
+      ctx.fillRect(x, y, 4, wallHeight);
+    }
+  }
+
+  lengthInput.addEventListener('input', update);
+  heightInput.addEventListener('input', update);
+});
+</script>
+</head>
+<body>
+<div class="container mt-5">
+  <h1 class="mb-4 text-center">Request a Quote</h1>
+
+  <form method="post" class="row g-3">
+    {% csrf_token %}
+
+    <div class="col-md-6">
+      <label for="name" class="form-label">Name</label>
+      <input type="text" name="name" id="name" class="form-control" required>
+    </div>
+
+    <div class="col-md-6">
+      <label for="email" class="form-label">Email</label>
+      <input type="email" name="email" id="email" class="form-control" required>
+    </div>
+
+    <div class="col-md-6">
+      <label for="length" class="form-label">Wall Length (m)</label>
+      <input type="number" step="0.01" name="length" id="length" class="form-control" required>
+    </div>
+
+    <div class="col-md-6">
+      <label for="height" class="form-label">Wall Height (m)</label>
+      <input type="number" step="0.01" name="height" id="height" class="form-control" required>
+    </div>
+
+    <div class="col-md-6">
+      <label for="suburb" class="form-label">Delivery Suburb</label>
+      <input type="text" name="suburb" id="suburb" class="form-control" required>
+    </div>
+
+    <div class="col-md-6">
+      <label for="postcode" class="form-label">Postcode</label>
+      <input type="text" name="postcode" id="postcode" class="form-control" required>
+    </div>
+
+    <div class="col-md-6">
+      <label for="date" class="form-label">Preferred Date</label>
+      <input type="date" name="date" id="date" class="form-control" required>
+    </div>
+
+    <input type="hidden" name="notes" id="notes">
+
+    <div class="col-12">
+      <div id="estimate" class="alert alert-info mt-3">Enter wall length & height to see estimate.</div>
+    </div>
+
+    <div class="canvas-container">
+      <canvas id="canvas" width="600" height="400" class="border"></canvas>
+    </div>
+
+    <div class="col-12 text-center">
+      <button type="submit" class="btn btn-primary btn-lg">Submit Quote Request</button>
+    </div>
+  </form>
+</div>
+</body>
+</html>
+
+

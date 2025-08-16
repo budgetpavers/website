@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Packing Slip - {{ order.order_number }}</title>
+    <style>
+        @media print {
+            body { margin: 0; }
+            .no-print { display: none; }
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.4;
+            margin: 20px;
+            color: #000;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin: 0 0 10px 0;
+            font-weight: bold;
+        }
+
+        .company-info {
+            font-size: 12px;
+            margin: 5px 0;
+        }
+
+        .addresses {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+
+        .address-section {
+            width: 48%;
+            border: 1px solid #000;
+        }
+
+        .address-header {
+            background-color: #000;
+            color: white;
+            padding: 8px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .address-content {
+            padding: 15px;
+            min-height: 120px;
+        }
+
+        .address-content div {
+            margin: 3px 0;
+        }
+
+        .order-info {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            border: 1px solid #000;
+        }
+
+        .order-info div {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            border-right: 1px solid #000;
+        }
+
+        .order-info div:last-child {
+            border-right: none;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            border: 2px solid #000;
+        }
+
+        .items-table th {
+            background-color: #000;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .items-table td {
+            padding: 12px;
+            border-bottom: 1px solid #ccc;
+            vertical-align: top;
+        }
+
+        .items-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .items-table .description-col {
+            width: 60%;
+        }
+
+        .items-table .quantity-col {
+            width: 20%;
+            text-align: center;
+        }
+
+        .product-details {
+            font-size: 12px;
+            color: #666;
+            margin-top: 3px;
+        }
+
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .print-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .signatures {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .signature-box {
+            width: 200px;
+            border-bottom: 1px solid #000;
+            text-align: center;
+            padding-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <button class="print-button no-print" onclick="window.print()">🖨️ Print</button>
+
+    <div class="header">
+        <h1>Packing Slip</h1>
+        <div class="company-info">Wall Quote - Concrete Sleepers & Retaining Solutions</div>
+        <div class="company-info">123 Industrial Drive, Adelaide SA 5000</div>
+        <div class="company-info">Phone: (08) 1234 5678 | Email: orders@wallquote.com.au</div>
+    </div>
+
+    <div class="addresses">
+        <div class="address-section">
+            <div class="address-header">Bill To:</div>
+            <div class="address-content">
+                <div><strong>{{ order.customer.full_name }}</strong></div>
+                <div>{{ order.customer.billing_address_line1 }}</div>
+                {% if order.customer.billing_address_line2 %}
+                    <div>{{ order.customer.billing_address_line2 }}</div>
+                {% endif %}
+                <div>{{ order.customer.billing_city }}, {{ order.customer.billing_state }} {{ order.customer.billing_postcode }}</div>
+                <div>{{ order.customer.billing_country }}</div>
+                <div style="margin-top: 10px;">
+                    <strong>Email:</strong> {{ order.customer.email }}
+                </div>
+                {% if order.customer.phone %}
+                    <div><strong>Phone:</strong> {{ order.customer.phone }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="address-section">
+            <div class="address-header">Ship To:</div>
+            <div class="address-content">
+                <div><strong>{{ order.customer.full_name }}</strong></div>
+                <div>{{ order.customer.delivery_address_line1 }}</div>
+                {% if order.customer.delivery_address_line2 %}
+                    <div>{{ order.customer.delivery_address_line2 }}</div>
+                {% endif %}
+                <div>{{ order.customer.delivery_city }}, {{ order.customer.delivery_state }} {{ order.customer.delivery_postcode }}</div>
+                <div>{{ order.customer.delivery_country }}</div>
+                <div style="margin-top: 10px;">
+                    <strong>Zone:</strong> {{ order.customer.delivery_zone }}
+                </div>
+                {% if order.delivery_notes %}
+                    <div><strong>Notes:</strong> {{ order.delivery_notes }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="order-info">
+        <div>
+            <strong>Order #</strong><br>
+            {{ order.order_number }}
+        </div>
+        <div>
+            <strong>Order Date</strong><br>
+            {{ order.created_at|date:"d/m/Y" }}
+        </div>
+        <div>
+            <strong>Shipping Method</strong><br>
+            Direct Delivery ({{ order.customer.delivery_zone }})
+        </div>
+    </div>
+
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th class="description-col">Description</th>
+                <th class="quantity-col">Quantity</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in order.items.all %}
+            <tr>
+                <td class="description-col">
+                    <strong>{{ item.product_name }}</strong>
+                    <div class="product-details">
+                        {% if item.product_length %}Length: {{ item.product_length }}{% endif %}
+                        {% if item.product_thickness %} | Thickness: {{ item.product_thickness }}{% endif %}
+                        {% if item.notes %}<br>Notes: {{ item.notes }}{% endif %}
+                    </div>
+                </td>
+                <td class="quantity-col">
+                    <strong>{{ item.quantity }}</strong>
+                </td>
+            </tr>
+            {% endfor %}
+
+            <!-- Add some blank rows for additional items if needed -->
+            <tr>
+                <td style="height: 40px;"></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td style="height: 40px;"></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td style="height: 40px;"></td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="signatures">
+        <div class="signature-box">
+            Packed By: ________________
+        </div>
+        <div class="signature-box">
+            Checked By: ________________
+        </div>
+        <div class="signature-box">
+            Date: ________________
+        </div>
+    </div>
+
+    <div class="footer">
+        <p><strong>Internal Use Only</strong></p>
+        <p>Order Status: {{ order.get_status_display }} | Payment: {{ order.payment_method|title }}</p>
+        <p>Printed: {% now "d/m/Y H:i" %} | Total Items: {{ order.total_items }}</p>
+    </div>
+</body>
+</html>

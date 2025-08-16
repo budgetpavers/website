@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Range - Modern Design</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Modern Desert Sand Theme */
+        :root {
+            --primary-sand: #f4e4bc;
+            --secondary-sand: #e6d3a3;
+            --accent-brown: #8b774c;
+            --dark-brown: #6d5a3a;
+            --light-sand: #faf6f0;
+            --border-sand: #d4c294;
+        }
+
+        body {
+            background-color: #ffffff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        /* Header Styling */
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-sand) 0%, var(--secondary-sand) 100%);
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(139, 119, 76, 0.15);
+        }
+
+        .page-header h1 {
+            color: var(--accent-brown);
+            font-weight: 700;
+            font-size: 2.5rem;
+            margin: 0;
+            text-align: center;
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            background: var(--light-sand);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 12px rgba(139, 119, 76, 0.1);
+            border: 1px solid var(--border-sand);
+        }
+
+        .filter-chip {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            margin: 0.25rem;
+            background: white;
+            border: 2px solid var(--border-sand);
+            border-radius: 25px;
+            color: var(--dark-brown);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .filter-chip:hover {
+            background: var(--accent-brown);
+            color: white;
+            border-color: var(--accent-brown);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(139, 119, 76, 0.25);
+        }
+
+        .filter-chip.active {
+            background: var(--accent-brown);
+            color: white;
+            border-color: var(--accent-brown);
+        }
+
+        /* Product Grid */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid var(--border-sand);
+            overflow: hidden;
+            transition: all 0.4s ease;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(139, 119, 76, 0.08);
+        }
+
+        .product-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 35px rgba(139, 119, 76, 0.2);
+            border-color: var(--accent-brown);
+        }
+
+        .product-image {
+            height: 240px;
+            background: #f8f9fa;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .product-card:hover .product-image img {
+            transform: scale(1.08);
+        }
+
+        .product-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            background: linear-gradient(135deg, #f1f3f4 0%, #e8eaed 100%);
+        }
+
+        .product-placeholder i {
+            font-size: 3rem;
+            color: #9aa0a6;
+        }
+
+        .product-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: var(--accent-brown);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .product-info {
+            padding: 1.5rem;
+        }
+
+        .product-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--dark-brown);
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+            min-height: 2.8rem;
+        }
+
+        .product-category {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .product-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-brown);
+            margin-bottom: 1.5rem;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .quantity-input {
+            width: 80px;
+            padding: 0.5rem;
+            border: 2px solid var(--border-sand);
+            border-radius: 8px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .quantity-input:focus {
+            outline: none;
+            border-color: var(--accent-brown);
+            box-shadow: 0 0 0 3px rgba(139, 119, 76, 0.1);
+        }
+
+        .btn-add-cart {
+            flex: 1;
+            background: var(--accent-brown);
+            color: white;
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-add-cart:hover {
+            background: var(--dark-brown);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 119, 76, 0.3);
+        }
+
+        .btn-add-cart:active {
+            transform: translateY(0);
+        }
+
+        /* Loading Animation */
+        .btn-add-cart.loading {
+            color: transparent;
+            pointer-events: none;
+        }
+
+        .btn-add-cart.loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: var(--border-sand);
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h3 {
+            color: var(--dark-brown);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Search Bar */
+        .search-container {
+            position: relative;
+            max-width: 400px;
+            margin: 0 auto 2rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 3rem;
+            border: 2px solid var(--border-sand);
+            border-radius: 25px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-brown);
+            box-shadow: 0 0 0 4px rgba(139, 119, 76, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .product-grid {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 1.5rem;
+            }
+
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .filter-bar {
+                padding: 1rem;
+            }
+
+            .filter-chip {
+                font-size: 0.9rem;
+                padding: 0.4rem 0.8rem;
+            }
+        }
+
+        /* Success Modal */
+        .modal-content {
+            border-radius: 16px;
+            border: none;
+            box-shadow: 0 20px 60px rgba(139, 119, 76, 0.3);
+        }
+
+        .modal-body {
+            padding: 2.5rem;
+            text-align: center;
+            background: var(--light-sand);
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            color: var(--accent-brown);
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-footer {
+            border: none;
+            padding: 1.5rem 2.5rem 2.5rem;
+            background: var(--light-sand);
+        }
+
+        /* Filter Animation */
+        .filter-section {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideIn 0.5s ease forwards;
+        }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Product Card Stagger Animation */
+        .product-card {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: cardSlideIn 0.6s ease forwards;
+        }
+
+        .product-card:nth-child(1) { animation-delay: 0.1s; }
+        .product-card:nth-child(2) { animation-delay: 0.2s; }
+        .product-card:nth-child(3) { animation-delay: 0.3s; }
+        .product-card:nth-child(4) { animation-delay: 0.4s; }
+        .product-card:nth-child(5) { animation-delay: 0.5s; }
+        .product-card:nth-child(6) { animation-delay: 0.6s; }
+
+        @keyframes cardSlideIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <!-- Modern Header -->
+        <div class="page-header">
+            <h1>Our Product Range</h1>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-container">
+            <div class="position-relative">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="search-input" placeholder="Search products..." id="productSearch">
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar filter-section">
+            <div class="d-flex flex-wrap justify-content-center align-items-center">
+                <span class="me-3 fw-semibold text-muted">Filter by:</span>
+
+                <!-- Main Categories -->
+                <div class="filter-chip active" data-filter="all">All Products</div>
+                <div class="filter-chip" data-filter="concrete-sleepers">Concrete Sleepers</div>
+                <div class="filter-chip" data-filter="under-fence-plinths">Under Fence Plinths</div>
+                <div class="filter-chip" data-filter="galvanised-steel">Galvanised Steel</div>
+                <div class="filter-chip" data-filter="step-kits">Step Kits</div>
+                <div class="filter-chip" data-filter="accessories">Accessories</div>
+            </div>
+
+            <!-- Sub-filters (shown when main category selected) -->
+            <div id="subFilters" class="mt-3" style="display: none;">
+                <div class="d-flex flex-wrap justify-content-center">
+                    <!-- These will be populated dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Grid -->
+        <div class="product-grid" id="productGrid">
+            <!-- Sample Products -->
+            <div class="product-card" data-category="concrete-sleepers" data-subcategory="charcoal-stackstone" data-brand="silvercrete">
+                <div class="product-image">
+                    <div class="product-placeholder">
+                        <i class="fas fa-image"></i>
+                    </div>
+                    <div class="product-badge">Silvercrete</div>
+                </div>
+                <div class="product-info">
+                    <div class="product-category">Concrete Sleepers</div>
+                    <h3 class="product-title">SC Sleeper Stackstone 2000×200×80mm [CHAR]</h3>
+                    <div class="product-price">$47.50</div>
+                    <div class="product-actions">
+                        <input type="number" class="quantity-input" value="1" min="1" max="999">
+                        <button class="btn-add-cart" data-product-id="1">
+                            <i class="fas fa-cart-plus me-2"></i>Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="product-card" data-category="concrete-sleepers" data-subcategory="charcoal-stackstone" data-brand="silvercrete">
+                <div class="product-image">
+                    <div class="product-placeholder">
+                        <i class="fas fa-image"></i>
+                    </div>
+                    <div class="product-badge">Silvercrete</div>
+                </div>
+                <div class="product-info">
+                    <div class="product-category">Concrete Sleepers</div>
+                    <h3 class="product-title">SC Sleeper Stackstone 2000×200×100mm [CHAR]</h3>
+                    <div class="product-price">$51.50</div>
+                    <div class="product-actions">
+                        <input type="number" class="quantity-input" value="1" min="1" max="999">
+                        <button class="btn-add-cart" data-product-id="2">
+                            <i class="fas fa-cart-plus me-2"></i>Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="product-card" data-category="concrete-sleepers" data-subcategory="charcoal-stackstone" data-brand="silvercrete">
+                <div class="product-image">
+                    <div class="product-placeholder">
+                        <i class="fas fa-image"></i>
+                    </div>
+                    <div class="product-badge">Silvercrete</div>
+                </div>
+                <div class="product-info">
+                    <div class="product-category">Concrete Sleepers</div>
+                    <h3 class="product-title">SC Sleeper Stackstone 2000×200×130mm [CHAR]</h3>
+                    <div class="product-price">$67.00</div>
+                    <div class="product-actions">
+                        <input type="number" class="quantity-input" value="1" min="1" max="999">
+                        <button class="btn-add-cart" data-product-id="3">
+                            <i class="fas fa-cart-plus me-2"></i>Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="product-card" data-category="galvanised-steel" data-subcategory="i-beam" data-brand="">
+                <div class="product-image">
+                    <div class="product-placeholder">
+                        <i class="fas fa-industry"></i>
+                    </div>
+                    <div class="product-badge">Steel</div>
+                </div>
+                <div class="product-info">
+                    <div class="product-category">Galvanised Steel</div>
+                    <h3 class="product-title">Galv Steel 120UB65 2.4m I Beam</h3>
+                    <div class="product-price">$156.75</div>
+                    <div class="product-actions">
+                        <input type="number" class="quantity-input" value="1" min="1" max="999">
+                        <button class="btn-add-cart" data-product-id="4">
+                            <i class="fas fa-cart-plus me-2"></i>Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="product-card" data-category="under-fence-plinths" data-subcategory="plain-charcoal" data-brand="silvercrete">
+                <div class="product-image">
+                    <div class="product-placeholder">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="product-badge">Silvercrete</div>
+                </div>
+                <div class="product-info">
+                    <div class="product-category">Under Fence Plinths</div>
+                    <h3 class="product-title">SC UFP Good 2340x100x50 [CHAR]</h3>
+                    <div class="product-price">$32.80</div>
+                    <div class="product-actions">
+                        <input type="number" class="quantity-input" value="1" min="1" max="999">
+                        <button class="btn-add-cart" data-product-id="5">
+                            <i class="fas fa-cart-plus me-2"></i>Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="product-card" data-category="accessories" data-subcategory="brackets" data-brand="">
+                <div class="product-image">
+                    <div class="product-placeholder">
+                        <i class="fas fa-tools"></i>
+                    </div>
+                    <div class="product-badge">Accessory</div>
+                </div>
+                <div class="product-info">
+                    <div class="product-category">Accessories</div>
+                    <h3 class="product-title">Step Kit Brackets [300mm 3pk]</h3>
+                    <div class="product-price">$45.20</div>
+                    <div class="product-actions">
+                        <input type="number" class="quantity-input" value="1" min="1" max="999">
+                        <button class="btn-add-cart" data-product-id="6">
+                            <i class="fas fa-cart-plus me-2"></i>Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State (hidden by default) -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <i class="fas fa-search"></i>
+            <h3>No products found</h3>
+            <p>Try adjusting your filters or search terms</p>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal fade" id="addedToCartModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="success-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h5 class="mb-3">Product Added to Cart!</h5>
+                    <p class="text-muted">Your item has been successfully added to your cart.</p>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn me-2" style="background-color: var(--accent-brown); border-color: var(--accent-brown); color: white;">View Cart</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-color: var(--accent-brown); color: var(--accent-brown);">Keep Shopping</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterChips = document.querySelectorAll('.filter-chip');
+            const productCards = document.querySelectorAll('.product-card');
+            const productGrid = document.getElementById('productGrid');
+            const emptyState = document.getElementById('emptyState');
+            const searchInput = document.getElementById('productSearch');
+            const subFilters = document.getElementById('subFilters');
+
+            // Filter functionality
+            filterChips.forEach(chip => {
+                chip.addEventListener('click', function() {
+                    // Update active state
+                    filterChips.forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+
+                    const filter = this.dataset.filter;
+                    filterProducts(filter);
+
+                    // Show sub-filters if needed
+                    showSubFilters(filter);
+                });
+            });
+
+            // Search functionality
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                filterBySearch(searchTerm);
+            });
+
+            // Add to cart functionality
+            document.querySelectorAll('.btn-add-cart').forEach(button => {
+                button.addEventListener('click', function() {
+                    const productId = this.dataset.productId;
+                    const quantityInput = this.parentElement.querySelector('.quantity-input');
+                    const quantity = quantityInput.value;
+
+                    // Add loading state
+                    this.classList.add('loading');
+                    this.disabled = true;
+
+                    // Simulate API call
+                    setTimeout(() => {
+                        this.classList.remove('loading');
+                        this.disabled = false;
+
+                        // Show success modal
+                        const modal = new bootstrap.Modal(document.getElementById('addedToCartModal'));
+                        modal.show();
+
+                        // Reset quantity
+                        quantityInput.value = 1;
+                    }, 1000);
+                });
+            });
+
+            function filterProducts(category) {
+                let visibleCount = 0;
+
+                productCards.forEach(card => {
+                    if (category === 'all' || card.dataset.category === category) {
+                        card.style.display = 'block';
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                toggleEmptyState(visibleCount === 0);
+            }
+
+            function filterBySearch(searchTerm) {
+                let visibleCount = 0;
+
+                productCards.forEach(card => {
+                    const title = card.querySelector('.product-title').textContent.toLowerCase();
+                    const category = card.querySelector('.product-category').textContent.toLowerCase();
+
+                    if (title.includes(searchTerm) || category.includes(searchTerm)) {
+                        card.style.display = 'block';
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                toggleEmptyState(visibleCount === 0);
+            }
+
+            function showSubFilters(category) {
+                const subFilterOptions = {
+                    'concrete-sleepers': ['Plain Grey', 'Plain Sandstone', 'Plain Charcoal', 'Charcoal Stackstone', 'Charcoal Rockface', 'Sandstone Rockface', 'Woodgrain'],
+                    'under-fence-plinths': ['Plain Grey UFPs', 'Plain Sandstone UFPs', 'Plain Charcoal UFPs', 'Charcoal Stackstone UFPs'],
+                    'galvanised-steel': ['120UB65 I Beam', '125x65 C Channel', '150UB14 I Beam', '150x75 C Channel'],
+                    'step-kits': ['Step Kits Wide Opening', 'Step Kit Tread'],
+                    'accessories': ['Step Kit Brackets', 'Fence Brackets', 'Wheel Stops', 'Chemical Anchor Glue']
+                };
+
+                if (category !== 'all' && subFilterOptions[category]) {
+                    const container = subFilters.querySelector('div');
+                    container.innerHTML = '<span class="me-3 fw-semibold text-muted">Type:</span>';
+
+                    subFilterOptions[category].forEach(option => {
+                        const chip = document.createElement('div');
+                        chip.className = 'filter-chip';
+                        chip.textContent = option;
+                        chip.addEventListener('click', () => filterBySubcategory(option));
+                        container.appendChild(chip);
+                    });
+
+                    subFilters.style.display = 'block';
+                } else {
+                    subFilters.style.display = 'none';
+                }
+            }
+
+            function filterBySubcategory(subcategory) {
+                // Implement subcategory filtering logic here
+                console.log('Filtering by subcategory:', subcategory);
+            }
+
+            function toggleEmptyState(show) {
+                if (show) {
+                    productGrid.style.display = 'none';
+                    emptyState.style.display = 'block';
+                } else {
+                    productGrid.style.display = 'grid';
+                    emptyState.style.display = 'none';
+                }
+            }
+
+            // Quantity input validation
+            document.querySelectorAll('.quantity-input').forEach(input => {
+                input.addEventListener('input', function() {
+                    if (this.value < 1) this.value = 1;
+                    if (this.value > 999) this.value = 999;
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+

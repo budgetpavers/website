@@ -1,0 +1,1023 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+  /* Product page specific styles */
+  .product-hero {
+    background: linear-gradient(135deg, var(--bg-light) 0%, white 100%);
+    padding: 8rem 0 4rem;
+    margin-top: -100px;
+    padding-top: 150px;
+  }
+
+  .product-image-gallery {
+    position: sticky;
+    top: 120px;
+  }
+
+  .main-product-image {
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: var(--shadow-xl);
+    margin-bottom: 1.5rem;
+    cursor: zoom-in;
+    transition: all 0.3s ease;
+  }
+
+  .main-product-image:hover {
+    transform: scale(1.02);
+  }
+
+  .main-product-image img {
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+    transition: all 0.3s ease;
+  }
+
+  .thumbnail-gallery {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .thumbnail {
+    width: 80px;
+    height: 80px;
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: all 0.3s ease;
+  }
+
+  .thumbnail:hover,
+  .thumbnail.active {
+    border-color: var(--primary-color);
+    transform: scale(1.05);
+  }
+
+  .thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .product-info {
+    background: white;
+    border-radius: 20px;
+    padding: 3rem;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .product-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    margin-bottom: 1rem;
+    line-height: 1.2;
+  }
+
+  .product-intro {
+    font-size: 1.1rem;
+    color: var(--text-light);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+  }
+
+  .product-badges {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .product-badge {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .product-badge.secondary {
+    background: var(--secondary-color);
+  }
+
+  .product-badge.accent {
+    background: var(--accent-color);
+  }
+
+  .specs-section {
+    background: var(--bg-light);
+    border-radius: 15px;
+    padding: 2rem;
+    margin: 2rem 0;
+  }
+
+  .specs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+  }
+
+  .spec-item {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+  }
+
+  .spec-item:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .spec-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--primary-color);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    font-size: 1.5rem;
+    color: white;
+  }
+
+  .spec-label {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+  }
+
+  .spec-value {
+    color: var(--text-light);
+    font-size: 0.9rem;
+  }
+
+  .variants-section {
+    margin: 3rem 0;
+  }
+
+  .variant-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    margin-bottom: 2rem;
+    transition: all 0.3s ease;
+  }
+
+  .variant-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .variant-header {
+    background: var(--bg-gradient);
+    color: white;
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .variant-icon {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+  }
+
+  .variant-content {
+    padding: 2rem;
+  }
+
+  .variant-features {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0;
+  }
+
+  .variant-features li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .variant-features li:last-child {
+    border-bottom: none;
+  }
+
+  .variant-features li::before {
+    content: "✓";
+    color: var(--secondary-color);
+    font-weight: bold;
+    font-size: 1.2rem;
+  }
+
+  .add-to-cart-section {
+    background: var(--bg-light);
+    border-radius: 15px;
+    padding: 2rem;
+    margin: 2rem 0;
+    border: 2px dashed var(--primary-color);
+  }
+
+  .thickness-selector {
+    margin-bottom: 1.5rem;
+  }
+
+  .thickness-options {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+  }
+
+  .thickness-option {
+    background: white;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 80px;
+    text-align: center;
+  }
+
+  .thickness-option:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+  }
+
+  .thickness-option.selected {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+  }
+
+  .price-display {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+
+  .price-amount {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+  }
+
+  .price-label {
+    color: var(--text-light);
+    font-size: 0.9rem;
+  }
+
+  .quantity-selector {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+
+  .quantity-input {
+    width: 100px;
+    text-align: center;
+    border-radius: 10px;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    padding: 0.75rem;
+    font-weight: 600;
+  }
+
+  .quantity-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: none;
+    background: var(--primary-color);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .quantity-btn:hover {
+    background: var(--primary-dark);
+    transform: scale(1.1);
+  }
+
+  .add-to-cart-btn {
+    background: var(--secondary-color);
+    color: white;
+    border: none;
+    border-radius: 15px;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    width: 100%;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .add-to-cart-btn:hover {
+    background: var(--secondary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .add-to-cart-btn:active {
+    transform: translateY(0);
+  }
+
+  .product-description {
+    background: white;
+    border-radius: 20px;
+    padding: 3rem;
+    margin: 3rem 0;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .description-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--bg-light);
+  }
+
+  .description-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--bg-gradient);
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: white;
+  }
+
+  .gallery-section {
+    margin: 3rem 0;
+  }
+
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+
+  .gallery-item {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .gallery-item:hover {
+    transform: scale(1.02);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .gallery-item img {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+  }
+
+  .spec-table {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    margin: 2rem 0;
+  }
+
+  .spec-table table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .spec-table th {
+    background: var(--primary-color);
+    color: white;
+    padding: 1rem;
+    font-weight: 600;
+    text-align: left;
+  }
+
+  .spec-table td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .spec-table tr:hover {
+    background: var(--bg-light);
+  }
+
+  /* Animations */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-on-scroll {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s ease;
+  }
+
+  .animate-on-scroll.animate {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Responsive design */
+  @media (max-width: 768px) {
+    .product-hero {
+      padding: 6rem 0 2rem;
+      padding-top: 120px;
+    }
+
+    .product-title {
+      font-size: 2rem;
+    }
+
+    .product-info {
+      padding: 2rem;
+    }
+
+    .specs-grid {
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+
+    .variant-content {
+      padding: 1.5rem;
+    }
+
+    .thickness-options {
+      justify-content: center;
+    }
+
+    .gallery-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .product-image-gallery {
+      position: static;
+      margin-bottom: 2rem;
+    }
+  }
+
+  /* Toast styling */
+  .toast {
+    border-radius: 15px;
+    border: none;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .toast.show {
+    animation: slideInRight 0.5s ease;
+  }
+
+  @keyframes slideInRight {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  /* Debug styles */
+  .debug-info {
+    background: #f0f0f0;
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 5px;
+    font-family: monospace;
+    font-size: 0.9rem;
+  }
+</style>
+
+<!-- DEBUG: Let's see what data we're getting -->
+<div class="debug-info" style="display: none;">
+  <strong>Debug Info:</strong><br>
+  Product: {{ product|default:"None" }}<br>
+  Product Name: {{ product.name|default:"No name" }}<br>
+  Product ID: {{ product.id|default:"No ID" }}<br>
+  Slug: {{ slug|default:"No slug" }}<br>
+  Product Keys: {{ product.keys|default:"No keys" }}
+</div>
+
+<div class="product-hero">
+  <div class="container">
+    {% if product %}
+      <div class="row g-5">
+        <!-- Product Images -->
+        <div class="col-lg-6">
+          <div class="product-image-gallery animate-on-scroll">
+            <div class="main-product-image" id="mainProductImage">
+              {% if product.main_image %}
+                <img src="{% static product.main_image %}" alt="{{ product.name }}" id="mainImage" onerror="this.src='{% static 'images/placeholder.jpg' %}'">
+              {% else %}
+                <div class="d-flex align-items-center justify-content-center bg-light" style="height: 400px;">
+                  <i class="fas fa-image fa-3x text-muted"></i>
+                  <span class="ms-2 text-muted">{{ product.name }} Image</span>
+                </div>
+              {% endif %}
+            </div>
+
+            {% if product.thumbs %}
+              <div class="thumbnail-gallery">
+                {% if product.main_image %}
+                  <div class="thumbnail active" onclick="changeMainImage('{% static product.main_image %}')">
+                    <img src="{% static product.main_image %}" alt="Main">
+                  </div>
+                {% endif %}
+                {% for thumb in product.thumbs %}
+                  <div class="thumbnail" onclick="changeMainImage('{% static thumb %}')">
+                    <img src="{% static thumb %}" alt="Thumbnail {{ forloop.counter }}" onerror="this.style.display='none'">
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Product Info -->
+        <div class="col-lg-6">
+          <div class="product-info animate-on-scroll">
+            <h1 class="product-title">{{ product.name }}</h1>
+
+            <div class="product-badges">
+              <span class="product-badge">Premium Quality</span>
+              <span class="product-badge secondary">Australian Made</span>
+              {% if product.name == "Ashwood" %}
+                <span class="product-badge accent">Popular Choice</span>
+              {% endif %}
+            </div>
+
+            {% if product.intro %}
+              <p class="product-intro">{{ product.intro }}</p>
+            {% endif %}
+
+            <!-- Quick Specs -->
+            {% if product.specs %}
+              <div class="specs-section">
+                <h4 class="mb-3"><i class="fas fa-cogs me-2"></i>Quick Specifications</h4>
+                <div class="specs-grid">
+                  {% for spec in product.specs|slice:":4" %}
+                    <div class="spec-item">
+                      <div class="spec-icon">
+                        <i class="fas fa-ruler"></i>
+                      </div>
+                      <div class="spec-label">Specification</div>
+                      <div class="spec-value">{{ spec }}</div>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <!-- Product not found -->
+      <div class="text-center py-5">
+        <div class="animate-on-scroll">
+          <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+          <h2>Product Not Found</h2>
+          <p class="lead">The product "{{ slug }}" could not be found.</p>
+          <a href="{% url 'our_range' %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-arrow-left me-2"></i>Back to Products
+          </a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="container">
+  {% if product %}
+    <!-- Product Description -->
+    {% if product.long_description %}
+      <div class="product-description animate-on-scroll">
+        <div class="description-header">
+          <div class="description-icon">
+            <i class="fas fa-info-circle"></i>
+          </div>
+          <div>
+            <h3 class="mb-1">Product Description</h3>
+            <p class="text-muted mb-0">Detailed information about {{ product.name }}</p>
+          </div>
+        </div>
+        <p class="lead">{{ product.long_description }}</p>
+      </div>
+    {% endif %}
+
+    <!-- Features Section -->
+    {% if product.features %}
+      <div class="product-description animate-on-scroll">
+        <div class="description-header">
+          <div class="description-icon">
+            <i class="fas fa-star"></i>
+          </div>
+          <div>
+            <h3 class="mb-1">Key Features</h3>
+            <p class="text-muted mb-0">What makes {{ product.name }} special</p>
+          </div>
+        </div>
+        <div class="row g-3">
+          {% for feature in product.features %}
+            <div class="col-md-6">
+              <div class="d-flex align-items-start gap-2">
+                <i class="fas fa-check-circle text-success mt-1"></i>
+                <span>{{ feature }}</span>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Specifications Table -->
+    {% if product.spec_table %}
+      <div class="animate-on-scroll">
+        <h3 class="mb-4"><i class="fas fa-table me-2"></i>Detailed Specifications</h3>
+        <div class="spec-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Length</th>
+                <th>Thickness</th>
+                <th>Weight</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in product.spec_table %}
+                <tr>
+                  <td><strong>{{ row.length }}</strong></td>
+                  <td>{{ row.thickness }}</td>
+                  <td>{{ row.weight }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Gallery Section -->
+    {% if product.gallery %}
+      <div class="gallery-section animate-on-scroll">
+        <h3 class="mb-4"><i class="fas fa-images me-2"></i>Product Gallery</h3>
+        <div class="gallery-grid">
+          {% for img in product.gallery %}
+            <div class="gallery-item" onclick="openImageModal('{% static img %}')">
+              <img src="{% static img %}" alt="Gallery Image {{ forloop.counter }}" onerror="this.style.display='none'">
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Variants Section -->
+    {% if product.variants %}
+      <div class="variants-section animate-on-scroll">
+        <h2 class="text-center mb-5">
+          <i class="fas fa-layer-group me-2"></i>Available Options
+        </h2>
+
+        {% for variant in product.variants %}
+          <div class="variant-card">
+            <div class="variant-header">
+              <div class="variant-icon">
+                <i class="fas fa-cube"></i>
+              </div>
+              <div>
+                <h4 class="mb-1">{{ variant.name }}</h4>
+                <p class="mb-0 opacity-75">{{ variant.description|truncatewords:10 }}</p>
+              </div>
+            </div>
+
+            <div class="variant-content">
+              <div class="row g-4">
+                <div class="col-md-4">
+                  {% if variant.image %}
+                    <img src="{% static variant.image %}" class="img-fluid rounded-3" alt="{{ variant.name }}" onerror="this.style.display='none'">
+                  {% else %}
+                    <div class="d-flex align-items-center justify-content-center bg-light rounded-3" style="height: 200px;">
+                      <i class="fas fa-image fa-2x text-muted"></i>
+                    </div>
+                  {% endif %}
+                </div>
+
+                <div class="col-md-8">
+                  <p class="mb-3">{{ variant.description }}</p>
+
+                  {% if variant.features %}
+                    <h6 class="fw-bold mb-2">Features:</h6>
+                    <ul class="variant-features">
+                      {% for feature in variant.features %}
+                        <li>{{ feature }}</li>
+                      {% endfor %}
+                    </ul>
+                  {% endif %}
+
+                  {% if variant.id %}
+                    <div class="add-to-cart-section">
+                      <form class="add-to-cart-form" data-variant-id="{{ variant.id }}">
+                        {% csrf_token %}
+
+                        <!-- Thickness Selection -->
+                        {% if variant.thickness_options %}
+                          <div class="thickness-selector">
+                            <label class="form-label fw-bold">
+                              <i class="fas fa-ruler-horizontal me-2"></i>Select Thickness:
+                            </label>
+                            <div class="thickness-options">
+                              {% for thickness in variant.thickness_options %}
+                                <div class="thickness-option {% if forloop.first %}selected{% endif %}"
+                                     data-thickness="{{ thickness.thickness }}"
+                                     data-price="{{ thickness.price }}"
+                                     data-weight="{{ thickness.weight }}"
+                                     onclick="selectThickness(this, '{{ variant.id }}')">
+                                  <div class="fw-bold">{{ thickness.thickness }}</div>
+                                  <small class="text-muted">${{ thickness.price }}</small>
+                                </div>
+                              {% endfor %}
+                            </div>
+                          </div>
+
+                          <div class="price-display" id="priceDisplay{{ variant.id }}">
+                            <div class="price-amount" id="priceAmount{{ variant.id }}">
+                              ${{ variant.thickness_options.0.price|floatformat:2 }}
+                            </div>
+                            <div class="price-label">
+                              Per unit • Weight: <span id="weightDisplay{{ variant.id }}">{{ variant.thickness_options.0.weight }}</span>
+                            </div>
+                          </div>
+                        {% else %}
+                          <div class="price-display">
+                            <div class="price-amount">${{ variant.price|floatformat:2 }}</div>
+                            <div class="price-label">Per unit</div>
+                          </div>
+                        {% endif %}
+
+                        <!-- Quantity Selection -->
+                        <div class="quantity-selector">
+                          <label class="form-label fw-bold mb-0">Quantity:</label>
+                          <button type="button" class="quantity-btn" onclick="changeQuantity('{{ variant.id }}', -1)">−</button>
+                          <input type="number" class="quantity-input" value="1" min="1" id="quantity{{ variant.id }}" name="quantity">
+                          <button type="button" class="quantity-btn" onclick="changeQuantity('{{ variant.id }}', 1)">+</button>
+                        </div>
+
+                        <!-- Add to Cart Button -->
+                        <button type="submit" class="add-to-cart-btn">
+                          <i class="fas fa-cart-plus"></i>
+                          Add to Cart
+                        </button>
+                      </form>
+                    </div>
+                  {% else %}
+                    <div class="alert alert-warning">
+                      <i class="fas fa-exclamation-triangle me-2"></i>
+                      Contact us for pricing and availability
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+  {% endif %}
+</div>
+
+<!-- Enhanced Toast Notification -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+  <div id="cartToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+    <div class="d-flex">
+      <div class="toast-body">
+        <i class="fas fa-check-circle me-2"></i>
+        <span id="toastMessage">Added to cart!</span>
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<!-- Image Modal -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content bg-transparent border-0">
+      <div class="modal-body p-0">
+        <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" style="z-index: 1051;"></button>
+        <img id="modalImage" class="img-fluid rounded-4" alt="Product Image">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // Scroll animations
+  const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+  };
+
+  const observer = new IntersectionObserver(function(entries) {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('animate');
+      }
+    });
+  }, observerOptions);
+
+  document.querySelectorAll('.animate-on-scroll').forEach(el => {
+    observer.observe(el);
+  });
+
+  // Handle add to cart forms
+  const forms = document.querySelectorAll('.add-to-cart-form');
+  forms.forEach(form => {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+      const variantId = form.getAttribute('data-variant-id');
+      const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]').value;
+
+      // Get selected thickness if it exists
+      const selectedThickness = form.querySelector('.thickness-option.selected');
+      if (selectedThickness) {
+        formData.append('thickness', selectedThickness.dataset.thickness);
+      }
+
+      // Show loading state
+      const submitBtn = form.querySelector('.add-to-cart-btn');
+      const originalText = submitBtn.innerHTML;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+      submitBtn.disabled = true;
+
+      fetch(`/add-to-cart/${variantId}/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken,
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        // Reset button
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+
+        if (data.success) {
+          // Show success toast
+          const quantity = formData.get('quantity');
+          const productName = form.closest('.variant-card').querySelector('h4').textContent;
+          showSuccessToast(`Added ${quantity}x ${productName} to cart!`);
+        } else {
+          showErrorToast("Failed to add to cart: " + (data.error || "Unknown error"));
+        }
+      })
+      .catch(err => {
+        // Reset button
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+
+        console.error(err);
+        showErrorToast("Error adding to cart.");
+      });
+    });
+  });
+});
+
+// Thickness selection function
+function selectThickness(element, variantId) {
+  // Remove active class from siblings
+  const siblings = element.parentElement.querySelectorAll('.thickness-option');
+  siblings.forEach(sibling => sibling.classList.remove('selected'));
+
+  // Add active class to clicked element
+  element.classList.add('selected');
+
+  // Update price display
+  const price = element.dataset.price;
+  const weight = element.dataset.weight;
+
+  const priceAmount = document.getElementById(`priceAmount${variantId}`);
+  const weightDisplay = document.getElementById(`weightDisplay${variantId}`);
+
+  if (priceAmount) {
+    priceAmount.textContent = `${parseFloat(price).toFixed(2)}`;
+  }
+  if (weightDisplay) {
+    weightDisplay.textContent = weight;
+  }
+}
+
+// Quantity change function
+function changeQuantity(variantId, change) {
+  const quantityInput = document.getElementById(`quantity${variantId}`);
+  const currentValue = parseInt(quantityInput.value) || 1;
+  const newValue = Math.max(1, currentValue + change);
+  quantityInput.value = newValue;
+}
+
+// Image gallery functions
+function changeMainImage(imageSrc) {
+  const mainImage = document.getElementById('mainImage');
+  mainImage.src = imageSrc;
+
+  // Update active thumbnail
+  const thumbnails = document.querySelectorAll('.thumbnail');
+  thumbnails.forEach(thumb => {
+    thumb.classList.remove('active');
+    if (thumb.querySelector('img').src === imageSrc) {
+      thumb.classList.add('active');
+    }
+  });
+}
+
+function openImageModal(imageSrc) {
+  const modalImage = document.getElementById('modalImage');
+  modalImage.src = imageSrc;
+
+  const imageModal = new bootstrap.Modal(document.getElementById('imageModal'));
+  imageModal.show();
+}
+
+// Toast notification functions
+function showSuccessToast(message) {
+  const toastElement = document.getElementById('cartToast');
+  const toastMessage = document.getElementById('toastMessage');
+
+  toastMessage.textContent = message;
+  toastElement.className = 'toast align-items-center text-white bg-success border-0';
+
+  const toast = new bootstrap.Toast(toastElement, { delay: 4000 });
+  toast.show();
+}
+
+function showErrorToast(message) {
+  const toastElement = document.getElementById('cartToast');
+  const toastMessage = document.getElementById('toastMessage');
+
+  toastMessage.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>' + message;
+  toastElement.className = 'toast align-items-center text-white bg-danger border-0';
+
+  const toast = new bootstrap.Toast(toastElement, { delay: 4000 });
+  toast.show();
+}
+</script>
+{% endblock %}
+
+
+
+
+
+
+

@@ -1,0 +1,1475 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+/* Address Autocomplete Styling for Checkout */
+.billing-address-container,
+.delivery-address-container {
+  position: relative;
+}
+
+/* Style the Google Places autocomplete dropdown */
+.pac-container {
+  border-radius: 10px !important;
+  border: 1px solid rgba(196, 147, 106, 0.2) !important;
+  box-shadow: 0 20px 25px -5px rgba(196, 147, 106, 0.1), 0 10px 10px -5px rgba(196, 147, 106, 0.04) !important;
+  font-family: 'Inter', sans-serif !important;
+  z-index: 9999 !important;
+  margin-top: 2px !important;
+}
+
+.pac-item {
+  padding: 12px 16px !important;
+  border-bottom: 1px solid rgba(196, 147, 106, 0.1) !important;
+  cursor: pointer !important;
+  font-size: 14px !important;
+}
+
+.pac-item:hover {
+  background: #F7F3EE !important;
+}
+
+.pac-item-selected {
+  background: #C4936A !important;
+  color: white !important;
+}
+
+.pac-matched {
+  font-weight: 600 !important;
+}
+
+.pac-icon {
+  display: none !important;
+}
+
+.checkout-loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+/* Special Requests Styling - MOVED HERE */
+.quick-request {
+  transition: all 0.2s ease;
+}
+
+.quick-request:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.quick-request.added {
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+  color: #155724;
+}
+
+#special_requests {
+  resize: vertical;
+  min-height: 100px;
+}
+
+#special_requests:focus {
+  border-color: #C4936A;
+  box-shadow: 0 0 0 0.2rem rgba(196, 147, 106, 0.25);
+}
+
+.char-count-warning {
+  color: #fd7e14 !important;
+}
+
+.char-count-danger {
+  color: #dc3545 !important;
+}
+</style>
+
+<!-- Loading overlay -->
+<div id="checkout-loading" class="checkout-loading" style="display: none;">
+  <div class="text-center">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <div class="mt-2">Processing your order...</div>
+  </div>
+</div>
+
+<div class="container mt-5 pt-5">
+  <div class="row">
+    <div class="col-lg-8">
+      <h2>Checkout</h2>
+
+      <!-- Customer Information Form -->
+      <form id="checkout-form">
+        {% csrf_token %}
+
+        <!-- Customer Details -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5>Customer Information</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="first_name" class="form-label">First Name *</label>
+                  <input type="text" class="form-control" id="first_name" name="first_name" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="last_name" class="form-label">Last Name *</label>
+                  <input type="text" class="form-control" id="last_name" name="last_name" required>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="email" class="form-label">Email *</label>
+                  <input type="email" class="form-control" id="email" name="email" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="phone" class="form-label">Phone</label>
+                  <input type="tel" class="form-control" id="phone" name="phone">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Billing Address -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5>Billing Address</h5>
+          </div>
+          <div class="card-body">
+            <div class="mb-3 billing-address-container">
+              <label for="billing_address_line1" class="form-label">Address Line 1 *</label>
+              <input type="text" class="form-control" id="billing_address_line1" name="billing_address_line1" required autocomplete="off" placeholder="Start typing your address...">
+            </div>
+            <div class="row">
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="billing_city" class="form-label">City *</label>
+                  <input type="text" class="form-control" id="billing_city" name="billing_city" required>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="billing_state" class="form-label">State *</label>
+                  <select class="form-control" id="billing_state" name="billing_state" required>
+                    <option value="">Select State</option>
+                    <option value="SA">South Australia</option>
+                    <option value="NSW">New South Wales</option>
+                    <option value="VIC">Victoria</option>
+                    <option value="QLD">Queensland</option>
+                    <option value="WA">Western Australia</option>
+                    <option value="TAS">Tasmania</option>
+                    <option value="NT">Northern Territory</option>
+                    <option value="ACT">Australian Capital Territory</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="billing_postcode" class="form-label">Postcode *</label>
+                  <input type="text" class="form-control" id="billing_postcode" name="billing_postcode"
+                         pattern="[0-9]{4}" maxlength="4" minlength="4"
+                         placeholder="e.g. 5000" title="Please enter a valid 4-digit Australian postcode" required>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Delivery Address -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="same_as_billing" checked>
+              <label class="form-check-label" for="same_as_billing">
+                <h5>Delivery Address (Same as billing)</h5>
+              </label>
+            </div>
+          </div>
+          <div class="card-body" id="delivery-address-section" style="display: none;">
+            <div class="mb-3 delivery-address-container">
+              <label for="delivery_address_line1" class="form-label">Address Line 1 *</label>
+              <input type="text" class="form-control" id="delivery_address_line1" name="delivery_address_line1" autocomplete="off" placeholder="Start typing your address...">
+            </div>
+            <div class="row">
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="delivery_city" class="form-label">City *</label>
+                  <input type="text" class="form-control" id="delivery_city" name="delivery_city">
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="delivery_state" class="form-label">State *</label>
+                  <select class="form-control" id="delivery_state" name="delivery_state">
+                    <option value="">Select State</option>
+                    <option value="SA">South Australia</option>
+                    <option value="NSW">New South Wales</option>
+                    <option value="VIC">Victoria</option>
+                    <option value="QLD">Queensland</option>
+                    <option value="WA">Western Australia</option>
+                    <option value="TAS">Tasmania</option>
+                    <option value="NT">Northern Territory</option>
+                    <option value="ACT">Australian Capital Territory</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="delivery_postcode" class="form-label">Postcode *</label>
+                  <input type="text" class="form-control" id="delivery_postcode" name="delivery_postcode"
+                         pattern="[0-9]{4}" maxlength="4" minlength="4"
+                         placeholder="e.g. 5000" title="Please enter a valid 4-digit Australian postcode">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Delivery/Pickup Selection -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5>🚚 Delivery Options</h5>
+          </div>
+          <div class="card-body">
+            <!-- Delivery Method Selection -->
+            <div class="mb-4">
+              <label class="form-label fw-bold">Choose your preferred option:</label>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="card border-primary h-100">
+                    <div class="card-body text-center">
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="delivery_method" id="delivery_option" value="delivery" checked>
+                        <label class="form-check-label" for="delivery_option">
+                          <h6 class="mt-2"><i class="fas fa-truck me-2"></i>Delivery</h6>
+                          <p class="text-muted small mb-1">We deliver to your address</p>
+                          <span class="badge bg-primary" id="delivery-cost-badge">$68.18</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="card border-success h-100">
+                    <div class="card-body text-center">
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="delivery_method" id="pickup_option" value="pickup">
+                        <label class="form-check-label" for="pickup_option">
+                          <h6 class="mt-2"><i class="fas fa-warehouse me-2"></i>Pickup</h6>
+                          <p class="text-muted small mb-1">Collect from our warehouse</p>
+                          <span class="badge bg-success">FREE</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pickup Address (shown when pickup selected) -->
+            <div id="pickup-address-info" class="alert alert-info" style="display: none;">
+              <h6><i class="fas fa-map-marker-alt me-2"></i>Pickup Address:</h6>
+              <p class="mb-2"><strong>Wall Quote Warehouse</strong><br>
+                123 Industrial Drive<br>
+                Adelaide, SA 5000</p>
+              <p class="mb-2"><strong>Fence Plinths</strong><br>
+                921 Old Port Wakefield Rd<br>
+                Virginia, SA 5120</p>
+                <p class="mb-0"><small>
+                <i class="fas fa-clock me-1"></i><strong>Pickup Hours:</strong> Mon-Fri 8:00 AM - 4:00 PM, Sat 8:00 AM - 2:00 PM<br>
+                <i class="fas fa-phone me-1"></i><strong>Contact:</strong> 0431 515 310
+              </small></p>
+            </div>
+
+            <!-- Slot Selection -->
+            <div class="mb-3">
+              <label class="form-label" id="slot-selection-label">Select your preferred delivery date and time:</label>
+              <div id="delivery-slots-container">
+                <div class="text-center">
+                  <div class="spinner-border spinner-border-sm" role="status">
+                    <span class="visually-hidden">Loading slots...</span>
+                  </div>
+                  <span class="ms-2">Loading available slots...</span>
+                </div>
+              </div>
+              <input type="hidden" id="selected_delivery_slot" name="delivery_slot_id">
+            </div>
+
+            <!-- Info Box -->
+            <div class="alert alert-info" id="delivery-info">
+              <small>
+                <i class="fas fa-info-circle"></i>
+                <strong>Delivery Information:</strong>
+                We deliver Monday-Friday, 9AM-5PM. Our team will contact you 24 hours before delivery to confirm the time slot.
+                Large orders may require crane truck access.
+              </small>
+            </div>
+
+            <div class="alert alert-success" id="pickup-info" style="display: none;">
+              <small>
+                <i class="fas fa-info-circle"></i>
+                <strong>Pickup Information:</strong>
+                Please bring photo ID and your order confirmation. Our team will help load your items.
+                For large orders, ensure you have appropriate transport.
+              </small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Special Requests Section - KEEP ONLY THE HTML HERE -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5><i class="fas fa-comment-dots me-2"></i>Special Requests</h5>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <label for="special_requests" class="form-label">Additional Requirements</label>
+              <textarea
+                class="form-control"
+                id="special_requests"
+                name="special_requests"
+                rows="4"
+                placeholder="Please let us know if you have any special requirements such as:&#10;• Sleeper cutting to specific lengths&#10;• Delivery access requirements&#10;• Installation assistance needed&#10;• Other custom modifications&#10;&#10;Our team will review your request and contact you if needed."
+                maxlength="1000"></textarea>
+              <div class="form-text">
+                <small class="text-muted">
+                  <i class="fas fa-info-circle me-1"></i>
+                  <span id="char-count">0</span>/1000 characters
+                </small>
+              </div>
+            </div>
+
+            <!-- Common Request Quick Buttons -->
+            <div class="mb-3">
+              <label class="form-label">Common Requests (click to add):</label>
+              <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm quick-request" data-text="Please cut sleepers to custom lengths - will provide measurements">
+                  <i class="fas fa-cut me-1"></i>Sleeper Cutting
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm quick-request" data-text="Please deliver to rear of property - limited street access">
+                  <i class="fas fa-truck me-1"></i>Rear Delivery
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm quick-request" data-text="Installation assistance required">
+                  <i class="fas fa-tools me-1"></i>Installation Help
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm quick-request" data-text="Please call before delivery to arrange access">
+                  <i class="fas fa-phone me-1"></i>Call Before Delivery
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm quick-request" data-text="Weekend delivery preferred if available">
+                  <i class="fas fa-calendar-weekend me-1"></i>Weekend Delivery
+                </button>
+              </div>
+            </div>
+
+            <!-- Important Notice -->
+            <div class="alert alert-info">
+              <small>
+                <i class="fas fa-exclamation-circle me-1"></i>
+                <strong>Note:</strong> Special requests may affect pricing and delivery times. Our team will contact you within 24 hours to confirm any additional costs or arrangements.
+              </small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Section -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5>Payment Information</h5>
+          </div>
+          <div class="card-body">
+            <!-- Stripe loading message -->
+            <div id="stripe-loading" class="text-center p-3">
+              <div class="spinner-border spinner-border-sm me-2" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              Loading payment form...
+            </div>
+
+            <!-- Card element (hidden initially) -->
+            <div id="card-element-container" style="display: none;">
+              <div id="card-element" class="form-control" style="padding: 12px;">
+                <!-- Stripe Elements will create form elements here -->
+              </div>
+            </div>
+
+            <div id="card-errors" role="alert" class="text-danger mt-2"></div>
+          </div>
+        </div>
+
+        <button type="submit" id="submit-button" class="btn btn-success btn-lg" disabled>
+          <span id="button-text">Loading...</span>
+          <div id="spinner" class="spinner-border spinner-border-sm ms-2" style="display: none;"></div>
+        </button>
+      </form>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header">
+          <h5>Order Summary</h5>
+        </div>
+        <div class="card-body">
+          {% for item in cart_items %}
+            <div class="d-flex justify-content-between mb-2">
+              <span>{{ item.quantity }}x {{ item.name }}</span>
+              <span>${{ item.total|floatformat:2 }}</span>
+            </div>
+          {% endfor %}
+
+          <hr>
+
+          <div class="d-flex justify-content-between">
+            <span>Subtotal:</span>
+            <span id="subtotal">${{ subtotal|floatformat:2 }}</span>
+          </div>
+
+          {% if applied_discount %}
+            <div class="d-flex justify-content-between text-success">
+              <span>Discount ({{ applied_discount.code }}):</span>
+              <span id="discount-amount">-${{ discount_amount|floatformat:2 }}</span>
+            </div>
+            {% if applied_discount.description %}
+              <div class="text-muted small mb-2">{{ applied_discount.description }}</div>
+            {% endif %}
+          {% endif %}
+
+          <div class="d-flex justify-content-between">
+            <span><span id="delivery-pickup-label">Delivery</span> (<span id="delivery-zone">Metro</span>):</span>
+            <span id="delivery-cost">${{ delivery_cost|floatformat:2 }}</span>
+          </div>
+
+          <div class="d-flex justify-content-between">
+            <span>GST (10%):</span>
+            <span id="gst">${{ gst|floatformat:2 }}</span>
+          </div>
+
+          <hr>
+
+          <div class="d-flex justify-content-between fw-bold">
+            <span>Total:</span>
+            <span id="total">${{ total|floatformat:2 }}</span>
+          </div>
+
+          {% if applied_discount %}
+            <div class="mt-3 p-2 bg-success text-white rounded text-center">
+              <small><i class="fas fa-tag me-1"></i>Discount Applied: {{ applied_discount.code }}</small>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Discount Code Section for Checkout -->
+      <div class="card mt-3">
+        <div class="card-header">
+          <h6><i class="fas fa-tag me-2"></i>Discount Code</h6>
+        </div>
+        <div class="card-body">
+          {% if not applied_discount %}
+            <div class="input-group">
+              <input type="text" id="checkout-discount-input" class="form-control" placeholder="Enter discount code">
+              <button type="button" id="checkout-apply-discount" class="btn btn-outline-primary btn-sm">Apply</button>
+            </div>
+            <div id="checkout-discount-message" class="mt-2"></div>
+          {% else %}
+            <div class="alert alert-success mb-0">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <strong>{{ applied_discount.code }}</strong><br>
+                  <small>{{ applied_discount.description }}</small>
+                </div>
+                <button type="button" id="checkout-remove-discount" class="btn btn-sm btn-outline-success">Remove</button>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+<!-- Load external APIs FIRST (before your script) -->
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+// ================================
+// GLOBAL VARIABLES & INITIALIZATION
+// ================================
+console.log("🔧 Starting Checkout Initialization...");
+
+// Store template variables safely - FIXED SYNTAX
+var templateVars = {
+    stripeKey: "{{ stripe_publishable_key|default:'' }}",
+    subtotal: {{ subtotal|default:0|floatformat:2 }},
+    deliveryCost: {{ delivery_cost|default:68.18|floatformat:2 }},
+    gst: {{ gst|default:0|floatformat:2 }},
+    total: {{ total|default:0|floatformat:2 }}
+};
+
+console.log("🔍 Template variables:", templateVars);
+
+// Global variables
+var stripe, elements, cardElement;
+var billingAutocomplete, deliveryAutocomplete;
+var checkoutForm = document.getElementById('checkout-form');
+var stripeInitialized = false;
+var googleMapsInitialized = false;
+
+// ================================
+// STRIPE INITIALIZATION - FIXED
+// ================================
+function initializeStripe() {
+    console.log("💳 Initializing Stripe...");
+
+    if (!templateVars.stripeKey) {
+        console.error("❌ No Stripe publishable key found!");
+        showStripeError("Payment system configuration error. Please contact support.");
+        return false;
+    }
+
+    try {
+        stripe = Stripe(templateVars.stripeKey);
+        elements = stripe.elements();
+
+        // Create card element with proper styling
+        cardElement = elements.create('card', {
+            hidePostalCode: true,
+            style: {
+                base: {
+                    fontSize: '16px',
+                    color: '#424770',
+                    fontFamily: 'Inter, system-ui, sans-serif',
+                    '::placeholder': {
+                        color: '#aab7c4',
+                    },
+                },
+                invalid: {
+                    color: '#fa755a',
+                    iconColor: '#fa755a'
+                }
+            },
+        });
+
+        // Mount card element
+        cardElement.mount('#card-element');
+
+        // Handle card validation errors
+        cardElement.on('change', function(event) {
+            var displayError = document.getElementById('card-errors');
+            if (event.error) {
+                displayError.textContent = event.error.message;
+                displayError.className = 'text-danger mt-2';
+            } else {
+                displayError.textContent = '';
+                displayError.className = 'mt-2';
+            }
+        });
+
+        // Show card element and hide loading
+        document.getElementById('stripe-loading').style.display = 'none';
+        document.getElementById('card-element-container').style.display = 'block';
+
+        // Enable submit button
+        var submitButton = document.getElementById('submit-button');
+        submitButton.disabled = false;
+        submitButton.querySelector('#button-text').textContent = 'Complete Order';
+
+        stripeInitialized = true;
+        console.log("✅ Stripe initialized successfully");
+        return true;
+
+    } catch (error) {
+        console.error("❌ Stripe initialization failed:", error);
+        showStripeError("Failed to load payment system. Please refresh the page.");
+        return false;
+    }
+}
+
+function showStripeError(message) {
+    document.getElementById('stripe-loading').innerHTML =
+        '<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>' + message + '</div>';
+}
+
+// ================================
+// GOOGLE MAPS INITIALIZATION - IMPROVED
+// ================================
+function initCheckoutAutocomplete() {
+    console.log("🗺️ Initializing Google Maps autocomplete...");
+
+    if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
+        console.log("⏳ Google Maps API not ready yet...");
+        return false;
+    }
+
+    try {
+        // Initialize billing address autocomplete
+        var billingInput = document.getElementById('billing_address_line1');
+        if (billingInput && !billingAutocomplete) {
+            billingAutocomplete = new google.maps.places.Autocomplete(billingInput, {
+                types: ['address'],
+                componentRestrictions: { country: 'AU' },
+                fields: ['formatted_address', 'geometry', 'address_components']
+            });
+
+            billingAutocomplete.addListener('place_changed', function() {
+                var place = billingAutocomplete.getPlace();
+                console.log("📍 Billing address selected:", place.formatted_address);
+
+                if (place.address_components) {
+                    fillAddressFields(place, 'billing');
+                    if (document.getElementById('same_as_billing').checked) {
+                        copyBillingToDelivery();
+                    }
+                }
+            });
+        }
+
+        // Initialize delivery address autocomplete
+        var deliveryInput = document.getElementById('delivery_address_line1');
+        if (deliveryInput && !deliveryAutocomplete) {
+            deliveryAutocomplete = new google.maps.places.Autocomplete(deliveryInput, {
+                types: ['address'],
+                componentRestrictions: { country: 'AU' },
+                fields: ['formatted_address', 'geometry', 'address_components']
+            });
+
+            deliveryAutocomplete.addListener('place_changed', function() {
+                var place = deliveryAutocomplete.getPlace();
+                console.log("📍 Delivery address selected:", place.formatted_address);
+
+                if (place.address_components) {
+                    fillAddressFields(place, 'delivery');
+                    updateDeliveryCost();
+                }
+            });
+        }
+
+        googleMapsInitialized = true;
+        console.log("✅ Google Maps autocomplete initialized");
+        return true;
+
+    } catch (error) {
+        console.error("❌ Google Maps initialization failed:", error);
+        return false;
+    }
+}
+
+// ================================
+// UTILITY FUNCTIONS
+// ================================
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function fillAddressFields(place, prefix) {
+    var components = place.address_components;
+
+    // Clear existing values
+    var fields = ['address_line1', 'city', 'state', 'postcode'];
+    fields.forEach(function(field) {
+        var element = document.getElementById(prefix + '_' + field);
+        if (element) element.value = '';
+    });
+
+    // Fill address line 1
+    var streetNumber = getComponent(components, 'street_number');
+    var streetName = getComponent(components, 'route');
+    var addressLine1 = (streetNumber + ' ' + streetName).trim();
+
+    var addressElement = document.getElementById(prefix + '_address_line1');
+    if (addressElement) {
+        addressElement.value = addressLine1 || place.formatted_address.split(',')[0];
+    }
+
+    // Fill city
+    var cityElement = document.getElementById(prefix + '_city');
+    if (cityElement) {
+        var city = getComponent(components, 'locality') ||
+                   getComponent(components, 'administrative_area_level_2') ||
+                   getComponent(components, 'sublocality');
+        cityElement.value = city;
+    }
+
+    // Fill state
+    var stateElement = document.getElementById(prefix + '_state');
+    if (stateElement) {
+        var state = getComponent(components, 'administrative_area_level_1', 'short_name');
+        if (state) stateElement.value = state;
+    }
+
+    // Fill postcode
+    var postcodeElement = document.getElementById(prefix + '_postcode');
+    if (postcodeElement) {
+        var postcode = getComponent(components, 'postal_code');
+        postcodeElement.value = postcode;
+
+        if (prefix === 'delivery' || (prefix === 'billing' && document.getElementById('same_as_billing').checked)) {
+            updateDeliveryCost();
+        }
+    }
+}
+
+function getComponent(components, type, format) {
+    format = format || 'long_name';
+    var component = components.find(function(c) {
+        return c.types.includes(type);
+    });
+    return component ? component[format] : '';
+}
+
+function updateDeliveryCost() {
+    var isPickup = document.querySelector('input[name="delivery_method"]:checked');
+    isPickup = isPickup ? isPickup.value === 'pickup' : false;
+    if (isPickup) return;
+
+    var sameAsBilling = document.getElementById('same_as_billing').checked;
+    var postcode = sameAsBilling ?
+        document.getElementById('billing_postcode').value :
+        document.getElementById('delivery_postcode').value;
+
+    console.log("📮 Updating delivery cost for postcode:", postcode);
+
+    if (postcode && postcode.length >= 4) {
+        // FIXED: Determine if cart contains steel products
+        var isSteel = cartContainsSteel();
+        console.log("🔧 Is steel order:", isSteel);
+
+        fetch('/calculate-delivery/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: `postcode=${postcode}&is_steel=${isSteel}`
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                document.getElementById('delivery-cost').textContent = '$' + parseFloat(data.delivery_cost).toFixed(2);
+                document.getElementById('delivery-zone').textContent = data.zone;
+                document.getElementById('delivery-cost-badge').textContent = '$' + parseFloat(data.delivery_cost).toFixed(2);
+                recalculateTotal();
+                console.log("✅ Delivery cost updated: $" + data.delivery_cost + " (" + data.zone + ")");
+
+                // Handle POA (Price on Application) for Zone 5
+                if (data.is_poa) {
+                    document.getElementById('delivery-cost').textContent = 'POA';
+                    document.getElementById('delivery-cost-badge').textContent = 'POA';
+                    console.log("📞 Zone 5 - Price on Application");
+                }
+            }
+        })
+        .catch(function(error) {
+            console.error('❌ Error updating delivery cost:', error);
+        });
+    }
+}
+
+function cartContainsSteel() {
+    // This function needs to check the current cart for steel products
+    // You'll need to implement this based on your cart structure
+
+    // For now, we can make an AJAX call to check
+    // Or implement client-side detection if cart data is available
+
+    // Temporary: assume non-steel for testing
+    return false;
+}
+
+function recalculateTotal() {
+    var subtotal = templateVars.subtotal;
+    var discountAmountEl = document.getElementById('discount-amount');
+    var discountAmount = discountAmountEl ? parseFloat(discountAmountEl.textContent.replace('-$', '')) : 0;
+
+    var deliveryCostText = document.getElementById('delivery-cost').textContent;
+    var deliveryCost = parseFloat(deliveryCostText.replace('$', ''));
+
+    var adjustedSubtotal = subtotal - discountAmount;
+    var gst = (adjustedSubtotal + deliveryCost) * 0.10;
+    var total = adjustedSubtotal + deliveryCost + gst;
+
+    document.getElementById('gst').textContent = '$' + gst.toFixed(2);
+    document.getElementById('total').textContent = '$' + total.toFixed(2);
+
+    console.log("💰 Total recalculated: $" + total.toFixed(2));
+}
+
+function copyBillingToDelivery() {
+    var billingFields = ['address_line1', 'city', 'state', 'postcode'];
+    billingFields.forEach(function(field) {
+        var billingElement = document.getElementById('billing_' + field);
+        var deliveryElement = document.getElementById('delivery_' + field);
+        if (billingElement && deliveryElement) {
+            deliveryElement.value = billingElement.value;
+        }
+    });
+    updateDeliveryCost();
+}
+
+// ================================
+// DELIVERY SLOTS - SAME AS BEFORE
+// ================================
+function loadSlots(type) {
+    type = type || 'delivery';
+    console.log("🚚 Loading " + type + " slots...");
+
+    var container = document.getElementById('delivery-slots-container');
+    if (!container) {
+        console.error('❌ Delivery slots container not found');
+        return;
+    }
+
+    container.innerHTML = '<div class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary" role="status"><span class="visually-hidden">Loading slots...</span></div><span class="ms-2">Loading available ' + type + ' slots...</span></div>';
+
+    fetch('/get-delivery-slots/?type=' + type)
+        .then(function(response) {
+            console.log("📡 Slots response status:", response.status);
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status);
+            }
+            return response.json();
+        })
+        .then(function(data) {
+            console.log('📦 Slots data received:', data);
+
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            if (data.slots && data.slots.length > 0) {
+                renderSlots(data.slots, type);
+            } else {
+                showNoSlotsMessage(type);
+            }
+        })
+        .catch(function(error) {
+            console.error('❌ Error loading slots:', error);
+            showSlotsError(type, error.message);
+        });
+}
+
+function renderSlots(slots, type) {
+    var container = document.getElementById('delivery-slots-container');
+    var slotsByDate = {};
+
+    slots.forEach(function(slot) {
+        if (!slotsByDate[slot.date]) {
+            slotsByDate[slot.date] = [];
+        }
+        slotsByDate[slot.date].push(slot);
+    });
+
+    var slotsHtml = '<div class="row">';
+    var sortedDates = Object.keys(slotsByDate).sort();
+
+    sortedDates.forEach(function(date) {
+        slotsHtml += '<div class="col-md-6 mb-3">';
+        slotsHtml += '<h6 class="fw-bold text-primary">' + formatDate(date) + '</h6>';
+
+        slotsByDate[date].forEach(function(slot) {
+            var isDisabled = slot.available_capacity <= 0;
+            var statusText = isDisabled ? 'FULL' : slot.available_capacity + ' spots left';
+            var statusClass = isDisabled ? 'text-danger' : 'text-success';
+            var disabledAttr = isDisabled ? 'disabled' : '';
+            var cardClass = isDisabled ? 'border-danger' : 'border-light';
+
+            slotsHtml += '<div class="card ' + cardClass + ' mb-2" style="cursor: ' + (isDisabled ? 'not-allowed' : 'pointer') + ';">';
+            slotsHtml += '<div class="card-body p-2">';
+            slotsHtml += '<div class="form-check">';
+            slotsHtml += '<input class="form-check-input delivery-slot-radio" type="radio" name="delivery_slot" value="' + slot.id + '" id="slot_' + slot.id + '" ' + disabledAttr + '>';
+            slotsHtml += '<label class="form-check-label w-100" for="slot_' + slot.id + '" style="cursor: ' + (isDisabled ? 'not-allowed' : 'pointer') + ';">';
+            slotsHtml += '<div class="d-flex justify-content-between align-items-center">';
+            slotsHtml += '<div><strong>' + slot.time_slot + '</strong><br><small class="' + statusClass + '">' + statusText + '</small></div>';
+            slotsHtml += '<div><small class="text-muted">' + slot.delivery_type + '</small></div>';
+            slotsHtml += '</div></label></div></div></div>';
+        });
+
+        slotsHtml += '</div>';
+    });
+
+    slotsHtml += '</div>';
+    container.innerHTML = slotsHtml;
+
+    // Add event listeners
+    document.querySelectorAll('.delivery-slot-radio').forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            if (this.checked) {
+                document.getElementById('selected_delivery_slot').value = this.value;
+                console.log("✅ Selected slot:", this.value);
+            }
+        });
+    });
+
+    console.log("✅ Rendered " + slots.length + " " + type + " slots");
+}
+
+function showNoSlotsMessage(type) {
+    var container = document.getElementById('delivery-slots-container');
+    var actionText = type === 'pickup' ? 'pickup' : 'delivery';
+
+    container.innerHTML = '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i><strong>No ' + actionText + ' slots available</strong><br>Please contact us at <strong>0431 515 310</strong> to arrange ' + actionText + '.</div>';
+}
+
+function showSlotsError(type, errorMessage) {
+    var container = document.getElementById('delivery-slots-container');
+    var actionText = type === 'pickup' ? 'pickup' : 'delivery';
+
+    container.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i><strong>Unable to load ' + actionText + ' slots</strong><br>' + errorMessage + '<br>Please contact us at <strong>0431 515 310</strong> to arrange ' + actionText + '.</div>';
+}
+
+function formatDate(dateString) {
+    var date = new Date(dateString + 'T00:00:00');
+    var today = new Date();
+    var tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    if (date.toDateString() === today.toDateString()) {
+        return 'Today (' + date.toLocaleDateString('en-AU', { weekday: 'short', month: 'short', day: 'numeric' }) + ')';
+    } else if (date.toDateString() === tomorrow.toDateString()) {
+        return 'Tomorrow (' + date.toLocaleDateString('en-AU', { weekday: 'short', month: 'short', day: 'numeric' }) + ')';
+    } else {
+        return date.toLocaleDateString('en-AU', { weekday: 'long', month: 'long', day: 'numeric' });
+    }
+}
+
+// ================================
+// DISCOUNT FUNCTIONS - IMPROVED ERROR HANDLING
+// ================================
+function applyCheckoutDiscount() {
+    var checkoutDiscountInput = document.getElementById('checkout-discount-input');
+    var checkoutApplyBtn = document.getElementById('checkout-apply-discount');
+
+    var code = checkoutDiscountInput.value.trim().toUpperCase();
+    var email = document.getElementById('email').value;
+
+    if (!code) {
+        showCheckoutDiscountMessage('Please enter a discount code', 'danger');
+        return;
+    }
+
+    checkoutApplyBtn.disabled = true;
+    checkoutApplyBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Apply';
+
+    var deliveryCost = parseFloat(document.getElementById('delivery-cost').textContent.replace('$', ''));
+
+    fetch("/apply-discount/", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+        body: JSON.stringify({
+            code: code,
+            email: email,
+            delivery_cost: deliveryCost
+        })
+    })
+    .then(function(res) {
+        if (!res.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return res.json();
+    })
+    .then(function(data) {
+        if (data.success) {
+            window.location.reload();
+        } else {
+            showCheckoutDiscountMessage(data.error, 'danger');
+        }
+    })
+    .catch(function(err) {
+        console.error('Error applying discount:', err);
+        showCheckoutDiscountMessage('Failed to apply discount. Please try again.', 'danger');
+    })
+    .finally(function() {
+        checkoutApplyBtn.disabled = false;
+        checkoutApplyBtn.innerHTML = 'Apply';
+    });
+}
+
+function removeCheckoutDiscount() {
+    fetch("/remove-discount/", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+        }
+    })
+    .then(function(res) {
+        if (!res.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return res.json();
+    })
+    .then(function(data) {
+        if (data.success) {
+            window.location.reload();
+        }
+    })
+    .catch(function(err) {
+        console.error('Error removing discount:', err);
+    });
+}
+
+function showCheckoutDiscountMessage(message, type) {
+    var checkoutMessageDiv = document.getElementById('checkout-discount-message');
+    checkoutMessageDiv.innerHTML = '<div class="alert alert-' + type + ' alert-dismissible fade show" role="alert">' +
+        message +
+        '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+        '</div>';
+}
+
+// ================================
+// SPECIAL REQUESTS FUNCTIONALITY - MISSING FROM ORIGINAL
+// ================================
+function initializeSpecialRequests() {
+    console.log("📝 Initializing special requests functionality...");
+
+    var specialRequestsTextarea = document.getElementById('special_requests');
+    var charCountElement = document.getElementById('char-count');
+    var quickRequestButtons = document.querySelectorAll('.quick-request');
+
+    // Character counter
+    if (specialRequestsTextarea && charCountElement) {
+        specialRequestsTextarea.addEventListener('input', function() {
+            var currentLength = this.value.length;
+            var maxLength = 1000;
+
+            charCountElement.textContent = currentLength;
+
+            // Update styling based on character count
+            charCountElement.className = '';
+            if (currentLength > maxLength * 0.8) {
+                charCountElement.className = 'char-count-warning';
+            }
+            if (currentLength > maxLength * 0.95) {
+                charCountElement.className = 'char-count-danger';
+            }
+        });
+    }
+
+    // Quick request buttons
+    quickRequestButtons.forEach(function(button) {
+        button.addEventListener('click', function() {
+            var textToAdd = this.getAttribute('data-text');
+            var currentText = specialRequestsTextarea.value;
+
+            // Add text with proper formatting
+            var newText = currentText.trim();
+            if (newText) {
+                newText += '\n\n• ' + textToAdd;
+            } else {
+                newText = '• ' + textToAdd;
+            }
+
+            specialRequestsTextarea.value = newText;
+
+            // Trigger character count update
+            specialRequestsTextarea.dispatchEvent(new Event('input'));
+
+            // Visual feedback
+            this.classList.add('added');
+            setTimeout(function() {
+                button.classList.remove('added');
+            }, 1000);
+
+            // Focus textarea
+            specialRequestsTextarea.focus();
+        });
+    });
+}
+
+// ================================
+// FORM SUBMISSION - FIXED VERSION
+// ================================
+function handleFormSubmission(event) {
+    event.preventDefault();
+    console.log("🛒 Processing checkout...");
+
+    if (!stripeInitialized) {
+        console.error("❌ Stripe not initialized");
+        document.getElementById('card-errors').textContent = 'Payment system not ready. Please refresh the page.';
+        return;
+    }
+
+    var submitButton = document.getElementById('submit-button');
+    var buttonText = document.getElementById('button-text');
+    var spinner = document.getElementById('spinner');
+    var loadingOverlay = document.getElementById('checkout-loading');
+
+    // Disable form and show loading
+    submitButton.disabled = true;
+    buttonText.textContent = 'Processing...';
+    spinner.style.display = 'inline-block';
+    loadingOverlay.style.display = 'flex';
+
+    // Clear any previous errors
+    document.getElementById('card-errors').textContent = '';
+
+    // Validate required fields
+    var requiredFields = [
+        { id: 'first_name', label: 'First Name' },
+        { id: 'last_name', label: 'Last Name' },
+        { id: 'email', label: 'Email' },
+        { id: 'billing_address_line1', label: 'Billing Address' },
+        { id: 'billing_city', label: 'Billing City' },
+        { id: 'billing_state', label: 'Billing State' },
+        { id: 'billing_postcode', label: 'Billing Postcode' }
+    ];
+
+    for (var i = 0; i < requiredFields.length; i++) {
+        var field = requiredFields[i];
+        var element = document.getElementById(field.id);
+        if (!element || !element.value.trim()) {
+            showFormError('Please fill in ' + field.label);
+            return;
+        }
+    }
+
+    // Validate email format
+    var email = document.getElementById('email').value;
+    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showFormError('Please enter a valid email address');
+        return;
+    }
+
+    // Validate postcode format
+    var postcode = document.getElementById('billing_postcode').value;
+    if (!/^\d{4}$/.test(postcode)) {
+        showFormError('Please enter a valid 4-digit postcode');
+        return;
+    }
+
+    // Check if delivery slot is selected
+    var selectedSlot = document.getElementById('selected_delivery_slot').value;
+    if (!selectedSlot) {
+        showFormError('Please select a delivery/pickup time slot');
+        return;
+    }
+
+    // Get form data
+    var formData = new FormData(checkoutForm);
+    var sameAsBilling = document.getElementById('same_as_billing').checked;
+    var isPickup = document.querySelector('input[name="delivery_method"]:checked').value === 'pickup';
+
+    // Copy billing to delivery if same as billing
+    if (sameAsBilling) {
+        formData.set('delivery_address_line1', formData.get('billing_address_line1'));
+        formData.set('delivery_city', formData.get('billing_city'));
+        formData.set('delivery_state', formData.get('billing_state'));
+        formData.set('delivery_postcode', formData.get('billing_postcode'));
+    }
+
+    var deliveryCost = isPickup ? 0 : parseFloat(document.getElementById('delivery-cost').textContent.replace('$', ''));
+
+    // Step 1: Create payment intent
+    console.log("💳 Creating payment intent...");
+
+    var paymentData = {
+        email: formData.get('email'),
+        first_name: formData.get('first_name'),
+        last_name: formData.get('last_name'),
+        delivery_postcode: formData.get('delivery_postcode'),
+        delivery_cost: deliveryCost
+    };
+
+    fetch('/create-payment-intent/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+        body: JSON.stringify(paymentData)
+    })
+    .then(function(response) {
+        if (!response.ok) {
+            return response.json().then(function(data) {
+                throw new Error(data.error || 'Payment setup failed');
+            });
+        }
+        return response.json();
+    })
+    .then(function(paymentResult) {
+        console.log("💳 Confirming payment with Stripe...");
+
+        return stripe.confirmCardPayment(paymentResult.client_secret, {
+            payment_method: {
+                card: cardElement,
+                billing_details: {
+                    name: formData.get('first_name') + ' ' + formData.get('last_name'),
+                    email: formData.get('email'),
+                    address: {
+                        line1: formData.get('billing_address_line1'),
+                        city: formData.get('billing_city'),
+                        state: formData.get('billing_state'),
+                        postal_code: formData.get('billing_postcode'),
+                        country: 'AU'
+                    }
+                }
+            }
+        });
+    })
+    .then(function(result) {
+        if (result.error) {
+            throw new Error(result.error.message);
+        }
+
+        console.log("✅ Payment confirmed, processing order...");
+
+        // Step 2: Process order - FIXED: Create orderData object properly
+        var orderData = {};
+        for (var pair of formData.entries()) {
+            orderData[pair[0]] = pair[1];
+        }
+
+        // Now add additional fields to the properly created orderData object
+        orderData.payment_intent_id = result.paymentIntent.id;
+        orderData.delivery_method = isPickup ? 'pickup' : 'delivery';
+        orderData.delivery_slot_id = selectedSlot;
+        orderData.special_requests = formData.get('special_requests') || '';
+
+        return fetch('/process-order/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: JSON.stringify(orderData)
+        });
+    })
+    .then(function(orderResponse) {
+        if (!orderResponse.ok) {
+            return orderResponse.json().then(function(data) {
+                throw new Error(data.error || 'Order processing failed');
+            });
+        }
+        return orderResponse.json();
+    })
+    .then(function(orderResult) {
+        console.log("🎉 Order completed successfully!");
+
+        // Show success message briefly before redirect
+        buttonText.textContent = 'Order Complete!';
+        setTimeout(function() {
+            window.location.href = orderResult.redirect_url;
+        }, 1000);
+    })
+    .catch(function(error) {
+        console.error('❌ Checkout error:', error);
+        showFormError(error.message);
+    });
+
+    function showFormError(message) {
+        document.getElementById('card-errors').textContent = message;
+
+        // Re-enable form
+        submitButton.disabled = false;
+        buttonText.textContent = 'Complete Order';
+        spinner.style.display = 'none';
+        loadingOverlay.style.display = 'none';
+    }
+}
+
+// ================================
+// PAGE INITIALIZATION - IMPROVED
+// ================================
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("🚀 Checkout page initializing...");
+
+    try {
+        // Initialize Special Requests first (no dependencies)
+        initializeSpecialRequests();
+
+        // Initialize Stripe with error handling
+        setTimeout(function() {
+            try {
+                initializeStripe();
+            } catch (error) {
+                console.error("❌ Stripe initialization error:", error);
+                showStripeError("Failed to initialize payment system. Please refresh the page.");
+            }
+        }, 100);
+
+        // Initialize Google Maps with improved retry logic
+        var googleMapsAttempts = 0;
+        var maxAttempts = 50;
+
+        function tryInitializeGoogleMaps() {
+            try {
+                if (initCheckoutAutocomplete()) {
+                    return; // Success
+                }
+            } catch (error) {
+                console.error("❌ Google Maps error:", error);
+            }
+
+            googleMapsAttempts++;
+            if (googleMapsAttempts < maxAttempts) {
+                setTimeout(tryInitializeGoogleMaps, 200);
+            } else {
+                console.warn('❌ Google Maps API failed to load after ' + maxAttempts + ' attempts');
+                // Continue without Google Maps autocomplete
+            }
+        }
+
+        setTimeout(tryInitializeGoogleMaps, 500);
+
+        // Load delivery slots with error handling
+        try {
+            loadSlots('delivery');
+        } catch (error) {
+            console.error("❌ Error loading delivery slots:", error);
+        }
+
+        // Handle delivery/pickup method changes
+        document.querySelectorAll('input[name="delivery_method"]').forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                var isPickup = this.value === 'pickup';
+                console.log("🚚 Delivery method changed to:", this.value);
+
+                // Update UI elements
+                var pickupInfo = document.getElementById('pickup-address-info');
+                var deliveryInfo = document.getElementById('delivery-info');
+                var pickupInfoAlert = document.getElementById('pickup-info');
+                var slotLabel = document.getElementById('slot-selection-label');
+                var deliveryPickupLabel = document.getElementById('delivery-pickup-label');
+                var deliveryCostEl = document.getElementById('delivery-cost');
+                var deliveryZoneEl = document.getElementById('delivery-zone');
+                var deliveryCostBadge = document.getElementById('delivery-cost-badge');
+
+                if (isPickup) {
+                    pickupInfo.style.display = 'block';
+                    deliveryInfo.style.display = 'none';
+                    pickupInfoAlert.style.display = 'block';
+                    slotLabel.textContent = 'Select your preferred pickup date and time:';
+                    deliveryPickupLabel.textContent = 'Pickup';
+                    deliveryCostEl.textContent = '$0.00';
+                    deliveryZoneEl.textContent = 'Warehouse';
+                    deliveryCostBadge.textContent = 'FREE';
+                    loadSlots('pickup');
+                } else {
+                    pickupInfo.style.display = 'none';
+                    deliveryInfo.style.display = 'block';
+                    pickupInfoAlert.style.display = 'none';
+                    slotLabel.textContent = 'Select your preferred delivery date and time:';
+                    deliveryPickupLabel.textContent = 'Delivery';
+                    updateDeliveryCost();
+                    loadSlots('delivery');
+                }
+
+                recalculateTotal();
+            });
+        });
+
+        // Handle same as billing checkbox
+        document.getElementById('same_as_billing').addEventListener('change', function() {
+            var deliverySection = document.getElementById('delivery-address-section');
+            if (this.checked) {
+                deliverySection.style.display = 'none';
+                copyBillingToDelivery();
+            } else {
+                deliverySection.style.display = 'block';
+            }
+        });
+
+        // Postcode change listeners with debouncing
+        var postcodeTimeout;
+
+        document.getElementById('billing_postcode').addEventListener('input', function() {
+            clearTimeout(postcodeTimeout);
+            postcodeTimeout = setTimeout(function() {
+                if (document.getElementById('same_as_billing').checked) {
+                    updateDeliveryCost();
+                }
+            }, 500);
+        });
+
+        var deliveryPostcodeEl = document.getElementById('delivery_postcode');
+        if (deliveryPostcodeEl) {
+            deliveryPostcodeEl.addEventListener('input', function() {
+                clearTimeout(postcodeTimeout);
+                postcodeTimeout = setTimeout(updateDeliveryCost, 500);
+            });
+        }
+
+        // Form submission
+        checkoutForm.addEventListener('submit', handleFormSubmission);
+
+        // Discount functionality
+        var checkoutDiscountInput = document.getElementById('checkout-discount-input');
+        var checkoutApplyBtn = document.getElementById('checkout-apply-discount');
+        var checkoutRemoveBtn = document.getElementById('checkout-remove-discount');
+
+        if (checkoutApplyBtn) {
+            checkoutApplyBtn.addEventListener('click', applyCheckoutDiscount);
+        }
+
+        if (checkoutRemoveBtn) {
+            checkoutRemoveBtn.addEventListener('click', removeCheckoutDiscount);
+        }
+
+        if (checkoutDiscountInput) {
+            checkoutDiscountInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    applyCheckoutDiscount();
+                }
+            });
+        }
+
+        console.log("✅ Checkout page initialization complete");
+
+    } catch (error) {
+        console.error("❌ Critical initialization error:", error);
+        // Show error message to user
+        var errorDiv = document.createElement('div');
+        errorDiv.className = 'alert alert-danger';
+        errorDiv.innerHTML = '<strong>Error:</strong> Page failed to initialize properly. Please refresh the page.';
+        document.querySelector('.container').prepend(errorDiv);
+    }
+});
+
+// Global function for Google Maps callback (if using async loading)
+window.initMap = function() {
+    console.log("🗺️ Google Maps callback triggered for checkout");
+    initCheckoutAutocomplete();
+};
+
+console.log("✅ Checkout JavaScript fully loaded");
+</script>
+
+<!-- Load Google Maps API with your API key -->
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCuo9o_t0Uwcjt7ZwogeoJ9etxI4nzTfbs&libraries=places&callback=initMap"></script>
+
+{% endblock %}

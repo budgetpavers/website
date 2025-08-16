@@ -1,0 +1,598 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    const STATIC_URL = "{% static '' %}";
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wall Quote - Premium Concrete Sleepers & Retaining Wall Solutions</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+    --primary-color: #C4936A;
+    --primary-dark: #B4835A;
+    --secondary-color: #8B7355;
+    --secondary-dark: #7B6345;
+    --accent-color: #E6D7C3;
+    --text-dark: #4A3728;
+    --text-light: #6A5748;
+    --bg-light: #F7F3EE;
+    --bg-gradient: linear-gradient(135deg, #C4936A, #8B7355);
+    --shadow-lg: 0 20px 25px -5px rgba(196, 147, 106, 0.1), 0 10px 10px -5px rgba(196, 147, 106, 0.04);
+    --shadow-xl: 0 25px 50px -12px rgba(196, 147, 106, 0.25);
+  }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+      color: var(--text-dark);
+      overflow-x: hidden;
+    }
+
+    /* FIXED Enhanced Navbar */
+    .navbar {
+      background: rgba(255, 255, 255, 0.95) !important;
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      transition: all 0.3s ease;
+      padding: 1rem 0;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1030;
+    }
+
+    .navbar.scrolled {
+      background: rgba(255, 255, 255, 0.98) !important;
+      box-shadow: var(--shadow-lg);
+      padding: 0.5rem 0;
+    }
+
+    .navbar-brand {
+      font-weight: 800;
+      font-size: 1.8rem;
+      color: var(--primary-color) !important;
+      text-decoration: none;
+    }
+
+    .navbar-brand img {
+      height: 60px;
+      width: auto;
+      filter: brightness(1.1);
+    }
+
+    .navbar-nav {
+      align-items: center;
+    }
+
+    .nav-link {
+      font-weight: 500;
+      color: var(--text-dark) !important;
+      transition: all 0.3s ease;
+      position: relative;
+      padding: 0.5rem 1rem !important;
+      margin: 0 0.25rem;
+    }
+
+    .nav-link:hover {
+      color: var(--primary-color) !important;
+      transform: translateY(-1px);
+    }
+
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: 0;
+      left: 50%;
+      background: var(--primary-color);
+      transition: all 0.3s ease;
+      transform: translateX(-50%);
+    }
+
+    .nav-link:hover::after {
+      width: 80%;
+    }
+
+    /* FIXED Dropdown Styles */
+    .dropdown-menu {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      border-radius: 15px;
+      box-shadow: var(--shadow-lg);
+      padding: 0.5rem 0;
+      margin-top: 0.5rem;
+    }
+
+    .dropdown-item {
+      color: var(--text-dark);
+      font-weight: 500;
+      padding: 0.75rem 1.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .dropdown-item:hover {
+      background: var(--primary-color);
+      color: white;
+      transform: translateX(5px);
+    }
+
+    .dropdown-divider {
+      margin: 0.5rem 0;
+      border-color: rgba(0, 0, 0, 0.1);
+    }
+
+    /* FIXED Navbar Toggler */
+    .navbar-toggler {
+      border: none;
+      padding: 0.25rem 0.5rem;
+    }
+
+    .navbar-toggler:focus {
+      box-shadow: none;
+    }
+
+    .navbar-toggler-icon {
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cpath stroke='rgba%2833, 37, 41, 0.75%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+    }
+
+    /* Page Content Styling */
+    .page-content {
+      min-height: 80vh;
+      padding-top: 120px; /* Increased to account for fixed navbar */
+    }
+
+    /* Enhanced Form Styling */
+    .form-control, .form-select {
+      border-radius: 10px;
+      border: 2px solid rgba(0, 0, 0, 0.1);
+      padding: 0.75rem 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 0.2rem rgba(196, 147, 106, 0.25);
+    }
+
+    /* Enhanced Button Styling */
+    .btn {
+      border-radius: 10px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn-primary {
+      background: var(--primary-color);
+      border: none;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-success {
+      background: var(--secondary-color);
+      border: none;
+    }
+
+    .btn-success:hover {
+      background: var(--secondary-dark);
+    }
+
+    /* Enhanced Card Styling */
+    .card {
+      border-radius: 15px;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      box-shadow: var(--shadow-lg);
+      transition: all 0.3s ease;
+    }
+
+    .card:hover {
+      box-shadow: var(--shadow-xl);
+    }
+
+    .card-header {
+      background: var(--bg-light);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      border-radius: 15px 15px 0 0 !important;
+      font-weight: 600;
+    }
+
+    /* Enhanced Table Styling */
+    .table {
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .table thead th {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      font-weight: 600;
+    }
+
+    .table tbody tr:hover {
+      background: var(--bg-light);
+    }
+
+    /* Toast Styling */
+    .toast {
+      border-radius: 10px;
+      border: none;
+    }
+
+    /* Footer Styling */
+    .footer {
+      background: #5A4A3A;
+      color: white;
+      padding: 3rem 0 1rem;
+      margin-top: 4rem;
+    }
+
+    .footer h5 {
+      color: var(--primary-color);
+      margin-bottom: 1rem;
+    }
+
+    .footer a {
+      color: #cbd5e1;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .footer a:hover {
+      color: var(--primary-color);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .navbar-brand {
+        font-size: 1.5rem;
+      }
+
+      .navbar-brand img {
+        height: 50px;
+      }
+
+      .page-content {
+        padding-top: 100px;
+      }
+
+      .nav-link {
+        padding: 0.75rem 1rem !important;
+      }
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--primary-color);
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--primary-dark);
+    }
+
+    /* Address Autocomplete Styling */
+    .pac-container {
+      border-radius: 10px !important;
+      border: 1px solid rgba(196, 147, 106, 0.2) !important;
+      box-shadow: 0 20px 25px -5px rgba(196, 147, 106, 0.1), 0 10px 10px -5px rgba(196, 147, 106, 0.04) !important;
+      font-family: 'Inter', sans-serif !important;
+      z-index: 9999 !important;
+      margin-top: 2px !important;
+    }
+
+    .pac-item {
+      padding: 12px 16px !important;
+      border-bottom: 1px solid rgba(196, 147, 106, 0.1) !important;
+      cursor: pointer !important;
+      font-size: 14px !important;
+    }
+
+    .pac-item:hover {
+      background: #F7F3EE !important;
+    }
+
+    .pac-item-selected {
+      background: #C4936A !important;
+      color: white !important;
+    }
+
+    .pac-matched {
+      font-weight: 600 !important;
+    }
+
+    .pac-icon {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+<!-- FIXED Enhanced Navbar -->
+<nav class="navbar navbar-expand-lg" id="mainNavbar">
+  <div class="container">
+    <a class="navbar-brand" href="{% url 'homepage' %}">
+      <img src="{% static 'images/Fence_Plinths_Logo.png' %}" alt="Fence Plinths">
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'homepage' %}">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'homepage' %}#about">About</a>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="productsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Products
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="productsDropdown">
+            <li><a class="dropdown-item" href="{% url 'our_range' %}">View All Products</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'our_range' %}?category=concrete_sleepers">Concrete Sleepers</a></li>
+            <li><a class="dropdown-item" href="{% url 'our_range' %}?category=concrete_ufp_cribs">Under Fence Plinths</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'our_range' %}?category=accessories">Accessories</a></li>
+            <li><a class="dropdown-item" href="{% url 'our_range' %}?category=galvanised_steel">Steel Products</a></li>
+          </ul>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'homepage' %}#calculator">Calculator</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'homepage' %}#contact">Contact</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'cart_view' %}">
+            <i class="fas fa-shopping-cart me-1"></i>Cart
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'faq' %}">FAQ</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'blog_list' %}">Blog</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Page Content -->
+<main class="page-content">
+  {% block content %}
+  {% endblock %}
+</main>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-4 mb-4">
+        <h5><i class="fas fa-layer-group me-2"></i>Wall Quote</h5>
+        <p class="text-muted">Australia's trusted partner for premium concrete sleepers and retaining wall solutions. Quality products, expert advice, competitive prices.</p>
+      </div>
+      <div class="col-lg-2 mb-4">
+        <h5>Quick Links</h5>
+        <ul class="list-unstyled">
+          <li><a href="{% url 'homepage' %}">Home</a></li>
+          <li><a href="{% url 'our_range' %}">Products</a></li>
+          <li><a href="{% url 'homepage' %}#calculator">Calculator</a></li>
+          <li><a href="{% url 'faq' %}">FAQ</a></li>
+        </ul>
+      </div>
+      <div class="col-lg-3 mb-4">
+        <h5>Products</h5>
+        <ul class="list-unstyled">
+          <li><a href="{% url 'product_detail' slug='ashwood' %}">Ashwood Series</a></li>
+          <li><a href="{% url 'product_detail' slug='blackwood' %}">Blackwood Series</a></li>
+          <li><a href="{% url 'product_detail' slug='concrete-ufp' %}">Concrete UFP</a></li>
+          <li><a href="{% url 'product_detail' slug='steel-posts' %}">Steel Posts</a></li>
+        </ul>
+      </div>
+      <div class="col-lg-3 mb-4">
+        <h5>Contact</h5>
+        <ul class="list-unstyled">
+          <li><i class="fas fa-phone me-2"></i>0431 515 310</li>
+          <li><i class="fas fa-envelope me-2"></i>fenceplinths@gmail.com</li>
+          <li><i class="fas fa-map-marker-alt me-2"></i>921 Old Port Wakefield Rd<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Virginia, SA 5120</li>
+          <li><i class="fas fa-clock me-2"></i>Mon-Fri 8AM-4PM<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sat 8AM-2PM, Sun Closed</li>
+        </ul>
+      </div>
+    </div>
+    <hr class="my-4" style="border-color: #374151;">
+    <div class="text-center">
+      <p class="text-muted mb-0">&copy; 2025 Wall Quote. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+<!-- Toast Notifications -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999;">
+  <div id="toast-container"></div>
+</div>
+
+<!-- JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// Enhanced JavaScript with conflict resolution
+document.addEventListener("DOMContentLoaded", function() {
+  console.log("🚀 Base template loaded");
+
+  // Navbar scroll effect
+  const navbar = document.getElementById('mainNavbar');
+  if (navbar) {
+    window.addEventListener('scroll', function() {
+      if (window.scrollY > 50) {
+        navbar.classList.add('scrolled');
+      } else {
+        navbar.classList.remove('scrolled');
+      }
+    });
+  }
+
+  // Enhanced toast notification system
+  window.showToast = function(message, type = 'success') {
+    const toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) return;
+
+    const toastId = 'toast-' + Date.now();
+
+    const iconMap = {
+      success: 'fas fa-check-circle',
+      warning: 'fas fa-exclamation-triangle',
+      error: 'fas fa-times-circle',
+      info: 'fas fa-info-circle'
+    };
+
+    const colorMap = {
+      success: 'success',
+      warning: 'warning',
+      error: 'danger',
+      info: 'info'
+    };
+
+    const toastHtml = `
+      <div id="${toastId}" class="toast align-items-center text-white bg-${colorMap[type]} border-0 mb-2" role="alert">
+        <div class="d-flex">
+          <div class="toast-body">
+            <i class="${iconMap[type]} me-2"></i>${message}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+      </div>
+    `;
+
+    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+
+    const toastElement = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastElement, { delay: 4000 });
+    toast.show();
+
+    toastElement.addEventListener('hidden.bs.toast', function() {
+      toastElement.remove();
+    });
+  };
+
+  // Enhanced cookie utility
+  window.getCookie = function(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  };
+});
+
+// FIXED: Single global initMap function to prevent conflicts
+let googleMapsInitialized = false;
+
+window.initMap = function() {
+  if (googleMapsInitialized) {
+    console.log("🗺️ Google Maps already initialized, skipping...");
+    return;
+  }
+
+  googleMapsInitialized = true;
+  console.log("🗺️ Global initMap callback triggered");
+
+  // Call page-specific initialization functions if they exist
+  if (typeof initializeAutocomplete === 'function') {
+    console.log("🏠 Calling homepage autocomplete init");
+    try {
+      initializeAutocomplete();
+    } catch (e) {
+      console.error("❌ Error in homepage autocomplete:", e);
+    }
+  }
+
+  if (typeof initCheckoutAutocomplete === 'function') {
+    console.log("🛒 Calling checkout autocomplete init");
+    try {
+      initCheckoutAutocomplete();
+    } catch (e) {
+      console.error("❌ Error in checkout autocomplete:", e);
+    }
+  }
+
+  console.log("✅ Global initMap completed");
+};
+
+// Prevent multiple Google Maps API loads
+let googleMapsLoading = false;
+
+function loadGoogleMaps() {
+  if (googleMapsLoading || typeof google !== 'undefined') {
+    return;
+  }
+
+  googleMapsLoading = true;
+  console.log("📍 Loading Google Maps API...");
+
+  const script = document.createElement('script');
+  script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyCuo9o_t0Uwcjt7ZwogeoJ9etxI4nzTfbs&libraries=places&callback=initMap';
+  script.async = true;
+  script.defer = true;
+  script.onerror = function() {
+    console.error("❌ Failed to load Google Maps API");
+    googleMapsLoading = false;
+  };
+  document.head.appendChild(script);
+}
+
+// Load Google Maps when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+  // Small delay to ensure all page scripts are loaded
+  setTimeout(loadGoogleMaps, 100);
+});
+</script>
+
+</body>
+</html>
+
+
+
+

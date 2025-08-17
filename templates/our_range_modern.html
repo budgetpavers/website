@@ -891,19 +891,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // SIMPLIFIED: Only show variants for sleepers, UFPs, and steel - not accessories
     function shouldShowVariants(product) {
-        const category = (product.category || '').toLowerCase();
+    const category = (product.category || '').toLowerCase();
+    const name = (product.name || '').toLowerCase();
 
-        // Only show variants for these categories
-        if (category.includes('sleeper') ||
-            category.includes('ufp') ||
-            category.includes('plinth') ||
-            category.includes('steel')) {
-            return (product.variant_count || 1) > 1;
-        }
-
-        // Never show variants for accessories, step kits, etc.
+    // Never show variants for step kits - each is unique
+    if (name.includes('step kit')) {
         return false;
     }
+
+    // Only show variants for these categories
+    if (category.includes('sleeper') ||
+        category.includes('ufp') ||
+        category.includes('plinth') ||
+        category.includes('steel')) {
+        return (product.variant_count || 1) > 1;
+    }
+
+    // Never show variants for accessories, etc.
+    return false;
+}
 
     // Helper function to create product name with proper format
     function getProductDisplayName(product, isBase = true) {

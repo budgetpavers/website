@@ -34,27 +34,60 @@ class ProductGroupManager:
     """Centralized product grouping and filtering logic"""
 
     @staticmethod
-    def get_main_category(category):
+    def get_main_category(category, product_name=""):
         """Convert database category to main category"""
         category_lower = category.lower()
+        name_lower = product_name.lower()
 
-        if 'sleeper' in category_lower and 'step' not in category_lower:
+        # Check for step kits FIRST - in both name and category
+        if 'step kit' in name_lower or 'step' in category_lower:
+            return "Step Kits"
+        elif 'sleeper' in category_lower and 'step' not in category_lower:  # Exclude step from sleeper check
             return "Concrete Sleepers"
         elif 'ufp' in category_lower or 'plinth' in category_lower:
             return "Under Fence Plinths"
         elif 'steel' in category_lower:
             return "Galvanised Steel"
-        elif 'step' in category_lower:
-            return "Step Kits"
         elif 'accessor' in category_lower:
             return "Accessories"
         else:
             return "Other"
 
     @staticmethod
+    def determine_step_kit_exact(product):
+        """Determine exact step kit type and color"""
+        name_lower = product.name.lower()
+
+        # First determine the main type
+        if 'wide opening' in name_lower:
+            base_type = "Step Kits Wide Opening"
+        elif 'tread' in name_lower:
+            base_type = "Step Kit Tread"
+        else:
+            return "Other Step Kits"
+
+        # Then add color variant if present
+        if 'plain grey' in name_lower:
+            return f"{base_type} - Plain Grey"
+        elif 'plain charcoal' in name_lower:
+            return f"{base_type} - Plain Charcoal"
+        elif 'plain sandstone' in name_lower:
+            return f"{base_type} - Plain Sandstone"
+        elif 'charcoal stackstone' in name_lower:
+            return f"{base_type} - Charcoal Stackstone"
+        elif 'charcoal rockface' in name_lower:
+            return f"{base_type} - Charcoal Rockface"
+        elif 'sandstone rockface' in name_lower:
+            return f"{base_type} - Sandstone Rockface"
+        elif 'woodgrain' in name_lower:
+            return f"{base_type} - Woodgrain"
+        else:
+            return base_type
+
+    @staticmethod
     def determine_product_subcategory(product):
         """Determine subcategory for any product"""
-        main_category = ProductGroupManager.get_main_category(product.category)
+        main_category = ProductGroupManager.get_main_category(product.category, product.name)  # Pass name too
 
         if main_category == "Concrete Sleepers":
             return ProductGroupManager.determine_sleeper_color_exact(product) or "Other Sleepers"
@@ -137,37 +170,6 @@ class ProductGroupManager:
             return "Charcoal Stackstone UFPs"
         return None
 
-    @staticmethod
-    def determine_step_kit_exact(product):
-        """Determine exact step kit type and color"""
-        name_lower = product.name.lower()
-
-        if 'wide opening' in name_lower:
-            if 'plain grey' in name_lower:
-                return "Step Kits Wide Opening - Plain Grey"
-            elif 'plain charcoal' in name_lower:
-                return "Step Kits Wide Opening - Plain Charcoal"
-            elif 'charcoal stackstone' in name_lower:
-                return "Step Kits Wide Opening - Charcoal Stackstone"
-            elif 'charcoal rockface' in name_lower:
-                return "Step Kits Wide Opening - Charcoal Rockface"
-            elif 'sandstone rockface' in name_lower:
-                return "Step Kits Wide Opening - Sandstone Rockface"
-            elif 'woodgrain' in name_lower:
-                return "Step Kits Wide Opening - Woodgrain"
-            else:
-                return "Step Kits Wide Opening"
-        elif 'tread' in name_lower:
-            if 'plain sandstone' in name_lower:
-                return "Step Kit Tread - Plain Sandstone"
-            elif 'plain charcoal' in name_lower:
-                return "Step Kit Tread - Plain Charcoal"
-            elif 'plain grey' in name_lower:
-                return "Step Kit Tread - Plain Grey"
-            else:
-                return "Step Kit Tread"
-        else:
-            return "Other Step Kits"
 
     @staticmethod
     def determine_accessory_exact(product):
@@ -215,62 +217,79 @@ class ProductGroupManager:
         # Extract brand
         details['brand'] = ProductGroupManager.extract_brand_from_product(product)
 
-        # Extract length
-        length_patterns = [
-            r'(\d+\.?\d*)\s*m(?:\s|$|x)',  # e.g., "2.4m", "1.8m"
-            r'(\d{3,4})\s*mm',  # e.g., "600mm", "1200mm"
-            r'(\d{4})\s*(?:mm|x)',  # e.g., "2000mm", "2400x"
+        # UPDATED: Handle multiple dimension patterns
+        dimension_patterns = [
+            # Standard pattern: 2000x200x80mm
+            r'(\d{3,4})\s*[×x]\s*(\d{2,3})\s*[×x]\s*(\d{2,3})\s*mm',
+            # Tapered pattern: 2000x100-200x100mm
+            r'(\d{3,4})\s*[×x]\s*(\d{2,3})-(\d{2,3})\s*[×x]\s*(\d{2,3})\s*mm',
+            # Standard without mm: 2000x200x80
+            r'(\d{3,4})\s*[×x]\s*(\d{2,3})\s*[×x]\s*(\d{2,3})(?!\d)',
         ]
 
-        for pattern in length_patterns:
+        dimensions_found = False
+        for i, pattern in enumerate(dimension_patterns):
             match = re.search(pattern, name_lower)
             if match:
-                value = float(match.group(1))
-                if value > 100:  # Likely millimeters
-                    details['length'] = f"{value / 1000:.1f}m"
-                else:  # Likely meters
-                    details['length'] = f"{value:.1f}m"
+                if i == 1:  # Tapered pattern
+                    length_mm = int(match.group(1))
+                    height_start = int(match.group(2))
+                    height_end = int(match.group(3))
+                    thickness_mm = int(match.group(4))
+
+                    details['length'] = f"{length_mm / 1000:.1f}m"
+                    details['height'] = f"{height_start}-{height_end}mm tapered"
+                    details['thickness'] = f"{thickness_mm}mm"
+                else:  # Standard patterns
+                    length_mm = int(match.group(1))
+                    height_mm = int(match.group(2))
+                    thickness_mm = int(match.group(3))
+
+                    details['length'] = f"{length_mm / 1000:.1f}m"
+                    details['height'] = f"{height_mm}mm"
+                    details['thickness'] = f"{thickness_mm}mm"
+
+                dimensions_found = True
                 break
 
-        # Extract height
-        height_patterns = [
-            r'(?:x|×)(\d{2,3})(?:x|×|mm|\s)',  # e.g., "x200x", "x150mm"
-            r'(\d{2,3})\s*(?:high|height)',  # e.g., "200 high"
-        ]
-
-        for pattern in height_patterns:
-            match = re.search(pattern, name_lower)
+        # Handle steel posts and step kits if no standard dimensions found
+        if not dimensions_found:
+            # Steel posts: "C-Post 1.8m" or "H-Post 2.0m"
+            steel_post_pattern = r'([ch])-post\s+(\d+\.?\d*)\s*m'
+            match = re.search(steel_post_pattern, name_lower)
             if match:
-                height = int(match.group(1))
-                if 'tapered' in name_lower:
-                    details['height'] = f"{height} tapered to 100mm"
-                else:
-                    details['height'] = f"{height}mm"
-                break
+                post_type = match.group(1).upper()
+                length = match.group(2)
+                details['length'] = f"{length}m"
+                details['height'] = f"{post_type}-Post"
+                details['thickness'] = "Steel"
+                dimensions_found = True
 
-        # Extract thickness
-        thickness_patterns = [
-            r'(?:x|×)(\d{2,3})(?:mm|\s|$)',  # e.g., "x75mm", "x100 "
-            r'(\d{2,3})\s*(?:thick|mm)',  # e.g., "80 thick", "100mm"
-        ]
-
-        for pattern in thickness_patterns:
-            match = re.search(pattern, name_lower)
+            # Step kits: "OS Step Kit Stackstone 2.0m"
+            step_kit_pattern = r'step\s+kit.*?(\d+\.?\d*)\s*m'
+            match = re.search(step_kit_pattern, name_lower)
             if match:
-                thickness = int(match.group(1))
-                if 'rebated' in name_lower and thickness == 65:
-                    details['thickness'] = "Rebated 65 to 50mm"
-                else:
-                    details['thickness'] = f"{thickness}mm"
-                break
+                length = match.group(1)
+                details['length'] = f"{length}m"
+                details['height'] = "Step Kit"
+                details['thickness'] = "Kit"
+                dimensions_found = True
 
-        # Extract size for step kits
-        size_patterns = [r'(2\.0m|2\.4m)', r'(\d+\.?\d*m)']
-        for pattern in size_patterns:
-            match = re.search(pattern, name_lower)
-            if match:
-                details['size'] = match.group(1)
-                break
+        # If still no dimensions found, set meaningful defaults based on product type
+        if not dimensions_found:
+            if 'wheel stop' in name_lower:
+                details['length'] = "1.65m"
+                details['height'] = "Wheel Stop"
+                details['thickness'] = "Concrete"
+            elif 'step kit' in name_lower:
+                details['length'] = "Standard"
+                details['height'] = "Step Kit"
+                details['thickness'] = "Kit"
+            else:
+                # Set default values instead of leaving empty
+                details['length'] = "Standard"
+                details['height'] = "Standard"
+                details['thickness'] = "Standard"
 
         # Extract rebated info
         details['rebated'] = 'Yes' if 'rebated' in name_lower else 'No'
@@ -304,12 +323,17 @@ class ProductGroupManager:
         product_groups = {}
 
         for product in products:
-            main_category = ProductGroupManager.get_main_category(product.category)
+            main_category = ProductGroupManager.get_main_category(product.category, product.name)  # Pass name
             subcategory = ProductGroupManager.determine_product_subcategory(product)
             brand = ProductGroupManager.extract_brand_from_product(product)
 
-            # Create a unique group key for identical products (different sizes)
-            group_key = f"{main_category}_{subcategory}_{brand or 'nobrand'}"
+            # Special handling for step kits - don't group them
+            if main_category == "Step Kits":
+                # Each step kit is unique, use product ID in key
+                group_key = f"stepkit_{product.id}"
+            else:
+                # Create a unique group key for identical products (different sizes)
+                group_key = f"{main_category}_{subcategory}_{brand or 'nobrand'}"
 
             if group_key not in product_groups:
                 product_groups[group_key] = {
@@ -317,13 +341,18 @@ class ProductGroupManager:
                     'main_category': main_category,
                     'subcategory': subcategory,
                     'brand': brand,
-                    'representative_product': product,  # Use first product as representative
+                    'representative_product': product,
                     'min_price': product.price,
                     'variant_count': 0
                 }
 
             product_groups[group_key]['products'].append(product)
-            product_groups[group_key]['variant_count'] += 1
+
+            # For step kits, always set variant_count to 1
+            if main_category == "Step Kits":
+                product_groups[group_key]['variant_count'] = 1
+            else:
+                product_groups[group_key]['variant_count'] += 1
 
             # Update min price
             if product.price < product_groups[group_key]['min_price']:
@@ -336,15 +365,29 @@ class ProductGroupManager:
     def apply_category_filter(products, category_filter):
         """Apply category filtering"""
         if category_filter == 'concrete-sleepers':
-            return products.filter(Q(category__icontains='Concrete Sleepers') | Q(category__icontains='Sleeper'))
+            return products.filter(
+                Q(category__icontains='Concrete Sleepers') |
+                Q(category__icontains='Sleeper'),
+                ~Q(name__icontains='Step Kit')  # Exclude step kits
+            )
         elif category_filter == 'under-fence-plinths':
-            return products.filter(Q(category__icontains='Under Fence Plinths') | Q(category__icontains='UFP'))
+            return products.filter(
+                Q(category__icontains='Under Fence Plinths') |
+                Q(category__icontains='UFP'),
+                ~Q(name__icontains='Step Kit')  # Exclude step kits
+            )
         elif category_filter == 'galvanised-steel':
             return products.filter(Q(category__icontains='Steel'))
         elif category_filter == 'accessories':
-            return products.filter(Q(category__icontains='Accessories') | Q(category__icontains='Wheel Stops'))
+            return products.filter(
+                Q(category__icontains='Accessories') |
+                Q(category__icontains='Wheel Stops')
+            )
         elif category_filter == 'step-kits':
-            return products.filter(Q(category__icontains='Step'))
+            return products.filter(
+                Q(name__icontains='Step Kit') |
+                Q(category__icontains='Step Kit')
+            )
         else:
             return products
 
@@ -708,6 +751,13 @@ def handle_product_variants(request):
 
         print(f"🔍 Loading variants for {base_product.name} (category: {main_category})")
 
+        if main_category == "Step Kits" or 'step kit' in base_product.name.lower():
+            return JsonResponse({
+                'success': True,
+                'variants': [],
+                'has_variants': False
+            })
+
         # Determine the product group characteristics
         if main_category == "Concrete Sleepers":
             color_group = ProductGroupManager.determine_sleeper_color_exact(base_product)
@@ -735,6 +785,10 @@ def handle_product_variants(request):
         variants = []
 
         for product in all_products:
+
+            if 'step kit' in product.name.lower():
+                continue
+
             product_main_category = ProductGroupManager.get_main_category(product.category)
 
             if product_main_category == main_category:

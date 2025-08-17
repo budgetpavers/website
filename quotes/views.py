@@ -89,7 +89,7 @@ class ProductGroupManager:
         """Determine exact sleeper color"""
         name_lower = product.name.lower()
 
-        # Check for exact color combinations
+        # Check for exact color combinations - order matters!
         if 'plain grey' in name_lower:
             return "Plain Grey"
         elif 'plain sandstone' in name_lower:
@@ -98,26 +98,26 @@ class ProductGroupManager:
             return "Plain Charcoal"
         elif 'charcoal stackstone' in name_lower:
             return "Charcoal Stackstone"
+        elif 'sandstone rockface' in name_lower:  # Check this BEFORE charcoal rockface
+            return "Sandstone Rockface"
         elif 'charcoal rockface' in name_lower:
             return "Charcoal Rockface"
-        elif 'sandstone rockface' in name_lower:
-            return "Sandstone Rockface"
         elif 'woodgrain' in name_lower:
             return "Woodgrain"
         else:
-            # Fallback logic
+            # Fallback logic - be more specific
             if 'stackstone' in name_lower:
                 return "Charcoal Stackstone"
             elif 'rockface' in name_lower:
-                if 'sandstone' in name_lower:
+                if 'sandstone' in name_lower or '[sand]' in name_lower:
                     return "Sandstone Rockface"
                 else:
                     return "Charcoal Rockface"
-            elif 'grey' in name_lower:
+            elif 'grey' in name_lower or '[grey]' in name_lower:
                 return "Plain Grey"
-            elif 'sandstone' in name_lower:
+            elif 'sandstone' in name_lower or '[sand]' in name_lower:
                 return "Plain Sandstone"
-            elif 'charcoal' in name_lower:
+            elif 'charcoal' in name_lower or '[char]' in name_lower:
                 return "Plain Charcoal"
             else:
                 return "Plain Grey"  # Default
@@ -218,6 +218,7 @@ class ProductGroupManager:
         # Extract length
         length_patterns = [
             r'(\d+\.?\d*)\s*m(?:\s|$|x)',  # e.g., "2.4m", "1.8m"
+            r'(\d{3,4})\s*mm',  # e.g., "600mm", "1200mm"
             r'(\d{4})\s*(?:mm|x)',  # e.g., "2000mm", "2400x"
         ]
 
@@ -225,7 +226,7 @@ class ProductGroupManager:
             match = re.search(pattern, name_lower)
             if match:
                 value = float(match.group(1))
-                if value > 10:  # Likely millimeters
+                if value > 100:  # Likely millimeters
                     details['length'] = f"{value / 1000:.1f}m"
                 else:  # Likely meters
                     details['length'] = f"{value:.1f}m"

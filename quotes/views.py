@@ -285,27 +285,55 @@ class ProductGroupManager:
         # Extract brand
         details['brand'] = ProductGroupManager.extract_brand_from_product(product)
 
-        # UPDATED: Handle multiple dimension patterns with better display and NO ROUNDING
+        # COMPLETELY UPDATED: Handle ALL dimension patterns including steel and concrete
         dimension_patterns = [
-            # Tapered pattern: 2355x100x65-50mm (show as 65-50)
+            # Steel C Channel pattern: 125x65 600mm C Channel
+            r'(\d{2,3})\s*[×x]\s*(\d{2,3})\s+(\d{3,4})\s*mm\s+c\s+channel',
+            # Steel I Beam pattern: 120UB65 600mm I Beam or 150UB14 600mm I Beam
+            r'(\d{2,3})ub\d*\s+(\d{3,4})\s*mm\s+i\s+beam',
+            # Tapered concrete pattern: 2400x100-200x100mm (FIXED)
+            r'(\d{3,4})\s*[×x]\s*(\d{2,3})-(\d{2,3})\s*[×x]\s*(\d{2,3})\s*mm',
+            # Tapered UFP pattern: 2355x200x65-50mm
             r'(\d{3,4})\s*[×x]\s*(\d{2,3})\s*[×x]\s*(\d{2,3})-(\d{2,3})\s*mm',
-            # Standard pattern: 2000x200x80mm
+            # Standard concrete pattern: 2000x200x80mm
             r'(\d{3,4})\s*[×x]\s*(\d{2,3})\s*[×x]\s*(\d{2,3})\s*mm',
             # Standard without mm: 2000x200x80
             r'(\d{3,4})\s*[×x]\s*(\d{2,3})\s*[×x]\s*(\d{2,3})(?!\d)',
+            # Handle variations with spaces: 2000 x 200 x 80
+            r'(\d{3,4})\s+[×x]\s+(\d{2,3})\s+[×x]\s+(\d{2,3})',
+            # Handle bracket format: [2000x200x80]
+            r'\[(\d{3,4})\s*[×x]\s*(\d{2,3})\s*[×x]\s*(\d{2,3})\]',
+            # Handle with units mixed in: 2000mmx200mmx80mm
+            r'(\d{3,4})mm\s*[×x]\s*(\d{2,3})mm\s*[×x]\s*(\d{2,3})mm',
         ]
 
         dimensions_found = False
         for i, pattern in enumerate(dimension_patterns):
             match = re.search(pattern, name_lower)
             if match:
-                if i == 0:  # Tapered pattern - show full range
+                if i == 0:  # Steel C Channel pattern
+                    width = int(match.group(1))
+                    height = int(match.group(2))
+                    length_mm = int(match.group(3))
+
+                    details['length'] = f"{length_mm / 1000:.1f}m".rstrip('0').rstrip('.')
+                    details['height'] = f"{width}x{height}mm"
+                    details['thickness'] = "C Channel"
+
+                elif i == 1:  # Steel I Beam pattern
+                    beam_size = int(match.group(1))
+                    length_mm = int(match.group(2))
+
+                    details['length'] = f"{length_mm / 1000:.1f}m".rstrip('0').rstrip('.')
+                    details['height'] = f"{beam_size}UB"
+                    details['thickness'] = "I Beam"
+
+                elif i == 2:  # Tapered concrete pattern: 2400x100-200x100mm
                     length_mm = int(match.group(1))
                     height_start = int(match.group(2))
-                    thickness_start = int(match.group(3))
-                    thickness_end = int(match.group(4))
+                    height_end = int(match.group(3))
+                    thickness_mm = int(match.group(4))
 
-                    # FIXED: Don't round - show exact dimensions for UFPs
                     if length_mm == 2340:
                         details['length'] = "2.34m"
                     elif length_mm == 2355:
@@ -313,14 +341,30 @@ class ProductGroupManager:
                     else:
                         details['length'] = f"{length_mm / 1000:.3f}m".rstrip('0').rstrip('.')
 
-                    details['height'] = f"{height_start}mm"
-                    details['thickness'] = f"{thickness_start}-{thickness_end}mm"  # Show full range
-                else:  # Standard patterns
+                    details['height'] = f"{height_start}-{height_end}mm"
+                    details['thickness'] = f"{thickness_mm}mm"
+
+                elif i == 3:  # Tapered UFP pattern: 2355x200x65-50mm
+                    length_mm = int(match.group(1))
+                    height_mm = int(match.group(2))
+                    thickness_start = int(match.group(3))
+                    thickness_end = int(match.group(4))
+
+                    if length_mm == 2340:
+                        details['length'] = "2.34m"
+                    elif length_mm == 2355:
+                        details['length'] = "2.355m"
+                    else:
+                        details['length'] = f"{length_mm / 1000:.3f}m".rstrip('0').rstrip('.')
+
+                    details['height'] = f"{height_mm}mm"
+                    details['thickness'] = f"{thickness_start}-{thickness_end}mm"
+
+                else:  # Standard concrete patterns (i >= 4)
                     length_mm = int(match.group(1))
                     height_mm = int(match.group(2))
                     thickness_mm = int(match.group(3))
 
-                    # FIXED: Don't round - show exact dimensions
                     if length_mm == 2340:
                         details['length'] = "2.34m"
                     elif length_mm == 2355:
@@ -359,6 +403,10 @@ class ProductGroupManager:
 
         # If still no dimensions found, set meaningful defaults based on product type
         if not dimensions_found:
+            # ADD DEBUG CODE HERE
+            print(f"DEBUG: No dimensions found for: '{product.name}'")
+            print(f"  Trying patterns on: '{name_lower}'")
+
             if 'wheel stop' in name_lower:
                 details['length'] = "1.65m"
                 details['height'] = "Wheel Stop"
@@ -398,6 +446,7 @@ class ProductGroupManager:
             details['pack_size'] = '[300mm 12pk]'
 
         return details
+
 
     @staticmethod
     def group_products_efficiently(products):

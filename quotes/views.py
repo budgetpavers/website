@@ -3017,3 +3017,32 @@ def debug_specific_group(request):
 
     except Exception as e:
         return JsonResponse({'error': str(e)})
+
+
+def debug_subcategory_filtering(request):
+    """Debug what subcategories are being generated"""
+    # Get UFP products specifically
+    ufp_products = Product.objects.filter(
+        Q(category__icontains='UFP') |
+        Q(category__icontains='Under Fence Plinths'),
+        is_active=True
+    )[:10]  # Just first 10 for testing
+
+    results = []
+    for product in ufp_products:
+        subcategory = ProductGroupManager.determine_product_subcategory(product)
+        ufp_exact = ProductGroupManager.determine_ufp_type_and_color_exact(product)
+
+        results.append({
+            'id': product.id,
+            'name': product.name,
+            'category': product.category,
+            'determined_subcategory': subcategory,
+            'ufp_exact_type': ufp_exact
+        })
+
+    return JsonResponse({
+        'success': True,
+        'ufp_products_found': ufp_products.count(),
+        'sample_analysis': results
+    })

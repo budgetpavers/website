@@ -879,14 +879,15 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function loadProducts() {
-        const params = new URLSearchParams({
-            category: currentCategory || 'all',
-            subcategory: currentSubcategory || '',
-            search: searchInput.value || ''
-        });
+    const params = new URLSearchParams({
+        operation: 'filter',  // Add this line
+        category: currentCategory || 'all',
+        subcategory: currentSubcategory || '',
+        search: searchInput.value || ''
+    });
 
-        const url = `/get-products-ajax/?${params.toString()}`;
-        requestManager.makeRequest(url);
+    const url = `/unified-product-api/?${params.toString()}`;  // Change this line
+    requestManager.makeRequest(url);
     }
 
     // SIMPLIFIED: Only show variants for sleepers, UFPs, and steel - not accessories

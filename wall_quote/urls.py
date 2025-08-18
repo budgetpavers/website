@@ -165,6 +165,9 @@ urlpatterns = [
     path('debug/range/', views.our_range_debug, name='debug_range'),
     path('debug/group/', views.debug_specific_group, name='debug_group'),
 
+    path('debug-subcategory/', views.debug_subcategory_filtering, name='debug_subcategory'),
+
+
     # ============================================================================
     # DEBUG ENDPOINTS (only in development)
     # ============================================================================

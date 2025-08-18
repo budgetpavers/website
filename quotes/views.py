@@ -27,22 +27,25 @@ from .products_data import products  # Import the static products data
 
 
 # ============================================================================
-# PRODUCT GROUPING AND CATEGORIZATION HELPERS
+# PRODUCT GROUPING AND CATEGORIZATION HELPERS - UPDATED
 # ============================================================================
 
 class ProductGroupManager:
-    """Centralized product grouping and filtering logic"""
+    """Centralized product grouping and filtering logic - UPDATED with new categorization rules"""
 
     @staticmethod
     def get_main_category(category, product_name=""):
-        """Convert database category to main category"""
+        """Convert database category to main category - UPDATED"""
         category_lower = category.lower()
         name_lower = product_name.lower()
 
-        # Check for step kits FIRST - in both name and category
-        if 'step kit' in name_lower or 'step' in category_lower:
+        # Check for sleeper cribs FIRST - move to Concrete Sleepers
+        if 'sleeper crib' in name_lower or ('crib' in name_lower and 'sleeper' in name_lower):
+            return "Concrete Sleepers"
+        # Check for step kits (after sleeper cribs check)
+        elif 'step kit' in name_lower or 'step' in category_lower:
             return "Step Kits"
-        elif 'sleeper' in category_lower and 'step' not in category_lower:  # Exclude step from sleeper check
+        elif 'sleeper' in category_lower and 'step' not in category_lower:
             return "Concrete Sleepers"
         elif 'ufp' in category_lower or 'plinth' in category_lower:
             return "Under Fence Plinths"
@@ -55,16 +58,15 @@ class ProductGroupManager:
 
     @staticmethod
     def determine_step_kit_exact(product):
-        """Determine exact step kit type and color"""
+        """Determine exact step kit type and color - UPDATED"""
         name_lower = product.name.lower()
 
-        # First determine the main type
-        if 'wide opening' in name_lower:
-            base_type = "Step Kits Wide Opening"
-        elif 'tread' in name_lower:
+        # Check for Step Kit Tread first
+        if 'step kit tread' in name_lower or ('tread' in name_lower and 'step kit' in name_lower):
             base_type = "Step Kit Tread"
         else:
-            return "Other Step Kits"
+            # Everything else goes to Wide Opening
+            base_type = "Step Kits Wide Opening"
 
         # Then add color variant if present
         if 'plain grey' in name_lower:
@@ -73,7 +75,7 @@ class ProductGroupManager:
             return f"{base_type} - Plain Charcoal"
         elif 'plain sandstone' in name_lower:
             return f"{base_type} - Plain Sandstone"
-        elif 'charcoal stackstone' in name_lower:
+        elif 'charcoal stackstone' in name_lower or 'stackstone' in name_lower:
             return f"{base_type} - Charcoal Stackstone"
         elif 'charcoal rockface' in name_lower:
             return f"{base_type} - Charcoal Rockface"
@@ -86,13 +88,18 @@ class ProductGroupManager:
 
     @staticmethod
     def determine_product_subcategory(product):
-        """Determine subcategory for any product"""
-        main_category = ProductGroupManager.get_main_category(product.category, product.name)  # Pass name too
+        """Determine subcategory for any product - UPDATED"""
+        main_category = ProductGroupManager.get_main_category(product.category, product.name)
 
         if main_category == "Concrete Sleepers":
-            return ProductGroupManager.determine_sleeper_color_exact(product) or "Other Sleepers"
+            # Check if it's a sleeper crib first
+            if 'sleeper crib' in product.name.lower() or (
+                    'crib' in product.name.lower() and 'sleeper' in product.name.lower()):
+                return ProductGroupManager.determine_sleeper_crib_color_exact(product) or "Other Sleeper Cribs"
+            else:
+                return ProductGroupManager.determine_sleeper_color_exact(product) or "Other Sleepers"
         elif main_category == "Under Fence Plinths":
-            return ProductGroupManager.determine_ufp_color_exact(product) or "Other UFPs"
+            return ProductGroupManager.determine_ufp_type_and_color_exact(product) or "Other UFPs"
         elif main_category == "Galvanised Steel":
             return ProductGroupManager.determine_steel_product_exact(product) or "Other Steel"
         elif main_category == "Step Kits":
@@ -103,15 +110,88 @@ class ProductGroupManager:
             return "Other"
 
     @staticmethod
-    def determine_steel_product_exact(product):
-        """Determine exact steel product type"""
+    def determine_sleeper_crib_color_exact(product):
+        """Determine exact sleeper crib color - NEW"""
         name_lower = product.name.lower()
 
-        if '120ub65' in name_lower:
+        # Check for exact color combinations
+        if 'plain grey' in name_lower:
+            return "Sleeper Crib - Plain Grey"
+        elif 'plain sandstone' in name_lower:
+            return "Sleeper Crib - Plain Sandstone"
+        elif 'plain charcoal' in name_lower:
+            return "Sleeper Crib - Plain Charcoal"
+        elif 'charcoal stackstone' in name_lower or 'stackstone' in name_lower:
+            return "Sleeper Crib - Charcoal Stackstone"
+        elif 'sandstone rockface' in name_lower:
+            return "Sleeper Crib - Sandstone Rockface"
+        elif 'charcoal rockface' in name_lower:
+            return "Sleeper Crib - Charcoal Rockface"
+        elif 'woodgrain' in name_lower:
+            return "Sleeper Crib - Woodgrain"
+        else:
+            # Fallback logic for sleeper cribs
+            if 'stackstone' in name_lower:
+                return "Sleeper Crib - Charcoal Stackstone"
+            elif 'rockface' in name_lower:
+                if 'sandstone' in name_lower or '[sand]' in name_lower:
+                    return "Sleeper Crib - Sandstone Rockface"
+                else:
+                    return "Sleeper Crib - Charcoal Rockface"
+            elif 'grey' in name_lower or '[grey]' in name_lower:
+                return "Sleeper Crib - Plain Grey"
+            elif 'sandstone' in name_lower or '[sand]' in name_lower:
+                return "Sleeper Crib - Plain Sandstone"
+            elif 'charcoal' in name_lower or '[char]' in name_lower:
+                return "Sleeper Crib - Plain Charcoal"
+            else:
+                return "Sleeper Crib - Plain Grey"
+
+    @staticmethod
+    def determine_ufp_type_and_color_exact(product):
+        """Determine exact UFP type (Good/Naughty) and color - UPDATED with debugging"""
+        name_lower = product.name.lower()
+
+        # Determine if it's Good or Naughty UFP first
+        ufp_type = ""
+        if 'ufp good' in name_lower or 'good' in name_lower:
+            ufp_type = "Good UFP"
+        elif 'ufp naughty' in name_lower or 'naughty' in name_lower:
+            ufp_type = "Naughty UFP"
+        else:
+            # Regular UFPs (not Good/Naughty)
+            ufp_type = "UFP"
+
+        # Determine color with more comprehensive detection
+        color = ""
+        if '[grey]' in name_lower or ' grey' in name_lower:
+            color = "Plain Grey"
+        elif '[char]' in name_lower or ' charcoal' in name_lower or 'charcoal' in name_lower:
+            if 'stackstone' in name_lower:
+                color = "Charcoal Stackstone"
+            else:
+                color = "Plain Charcoal"
+        elif '[sand]' in name_lower or ' sandstone' in name_lower or 'sandstone' in name_lower or ' sand' in name_lower:
+            color = "Plain Sandstone"
+        else:
+            color = "Plain Grey"  # Default
+
+        # Debug print to see what's being categorized
+        result = f"{ufp_type} - {color}"
+        print(f"DEBUG UFP: '{product.name}' -> '{result}'")
+
+        return result
+
+    @staticmethod
+    def determine_steel_product_exact(product):
+        """Determine exact steel product type - UPDATED"""
+        name_lower = product.name.lower()
+
+        if '120ub65' in name_lower or '120ub' in name_lower:
             return "120UB65 I Beam"
         elif '125x65' in name_lower and 'channel' in name_lower:
             return "125x65 C Channel"
-        elif '150ub14' in name_lower:
+        elif '150ub14' in name_lower or '150ub' in name_lower:
             return "150UB14 I Beam"
         elif '150x75' in name_lower and 'channel' in name_lower:
             return "150x75 C Channel"
@@ -119,7 +199,7 @@ class ProductGroupManager:
 
     @staticmethod
     def determine_sleeper_color_exact(product):
-        """Determine exact sleeper color"""
+        """Determine exact sleeper color - UPDATED"""
         name_lower = product.name.lower()
 
         # Check for exact color combinations - order matters!
@@ -131,7 +211,7 @@ class ProductGroupManager:
             return "Plain Charcoal"
         elif 'charcoal stackstone' in name_lower:
             return "Charcoal Stackstone"
-        elif 'sandstone rockface' in name_lower:  # Check this BEFORE charcoal rockface
+        elif 'sandstone rockface' in name_lower:
             return "Sandstone Rockface"
         elif 'charcoal rockface' in name_lower:
             return "Charcoal Rockface"
@@ -156,43 +236,31 @@ class ProductGroupManager:
                 return "Plain Grey"  # Default
 
     @staticmethod
-    def determine_ufp_color_exact(product):
-        """Determine exact UFP color"""
-        name_lower = product.name.lower()
-
-        if '[grey]' in name_lower:
-            return "Plain Grey UFPs"
-        elif '[char]' in name_lower:
-            return "Plain Charcoal UFPs"
-        elif '[sand]' in name_lower:
-            return "Plain Sandstone UFPs"
-        elif 'stackstone' in name_lower:
-            return "Charcoal Stackstone UFPs"
-        return None
-
-
-    @staticmethod
     def determine_accessory_exact(product):
-        """Determine exact accessory type"""
+        """Determine exact accessory type - UPDATED"""
         name_lower = product.name.lower()
 
-        if 'chemical anchor glue' in name_lower and '300ml' in name_lower:
+        if ('chemical anchor glue' in name_lower or 'anchor glue' in name_lower) and '300ml' in name_lower:
             return "Step Kit Chemical Anchor Glue"
         elif 'wheel stops' in name_lower and '1650' in name_lower:
             return "Wheel Stops"
         elif 'ag pipe' in name_lower and 'slotted sock' in name_lower:
             return "Ag Pipe - Slotted Sock"
-        elif 'step kit brackets' in name_lower:
+        elif ('step kit brackets' in name_lower or
+              ('brackets' in name_lower and 'step kit' in name_lower) or
+              ('brackets' in name_lower and 'plates' in name_lower and 'pins' in name_lower)):
             return "Step Kit Brackets"
-        elif 'fence bracket' in name_lower:
-            return "Fence Brackets"
+        elif 'fence bracket' in name_lower and 'steel fence' in name_lower:
+            return "Fence Bracket - Steel Fence"
+        elif 'fence bracket' in name_lower and 'timber fence' in name_lower:
+            return "Fence Bracket - Timber Fence"
         elif 'wheel stop fixings' in name_lower:
             return "Wheel Stop Fixings"
         return None
 
     @staticmethod
     def extract_brand_from_product(product):
-        """Extract brand from product based on category and name"""
+        """Extract brand from product based on category and name - UPDATED"""
         category = product.category.lower()
         name = product.name.lower()
         sku = getattr(product, 'sku', '') or ''
@@ -210,19 +278,19 @@ class ProductGroupManager:
 
     @staticmethod
     def extract_product_details_for_filtering(product):
-        """Extract detailed information from product for filtering"""
+        """Extract detailed information from product for filtering - UPDATED for better dimension display"""
         details = {}
         name_lower = product.name.lower()
 
         # Extract brand
         details['brand'] = ProductGroupManager.extract_brand_from_product(product)
 
-        # UPDATED: Handle multiple dimension patterns
+        # UPDATED: Handle multiple dimension patterns with better display and NO ROUNDING
         dimension_patterns = [
+            # Tapered pattern: 2355x100x65-50mm (show as 65-50)
+            r'(\d{3,4})\s*[×x]\s*(\d{2,3})\s*[×x]\s*(\d{2,3})-(\d{2,3})\s*mm',
             # Standard pattern: 2000x200x80mm
             r'(\d{3,4})\s*[×x]\s*(\d{2,3})\s*[×x]\s*(\d{2,3})\s*mm',
-            # Tapered pattern: 2000x100-200x100mm
-            r'(\d{3,4})\s*[×x]\s*(\d{2,3})-(\d{2,3})\s*[×x]\s*(\d{2,3})\s*mm',
             # Standard without mm: 2000x200x80
             r'(\d{3,4})\s*[×x]\s*(\d{2,3})\s*[×x]\s*(\d{2,3})(?!\d)',
         ]
@@ -231,21 +299,35 @@ class ProductGroupManager:
         for i, pattern in enumerate(dimension_patterns):
             match = re.search(pattern, name_lower)
             if match:
-                if i == 1:  # Tapered pattern
+                if i == 0:  # Tapered pattern - show full range
                     length_mm = int(match.group(1))
                     height_start = int(match.group(2))
-                    height_end = int(match.group(3))
-                    thickness_mm = int(match.group(4))
+                    thickness_start = int(match.group(3))
+                    thickness_end = int(match.group(4))
 
-                    details['length'] = f"{length_mm / 1000:.1f}m"
-                    details['height'] = f"{height_start}-{height_end}mm tapered"
-                    details['thickness'] = f"{thickness_mm}mm"
+                    # FIXED: Don't round - show exact dimensions for UFPs
+                    if length_mm == 2340:
+                        details['length'] = "2.34m"
+                    elif length_mm == 2355:
+                        details['length'] = "2.355m"
+                    else:
+                        details['length'] = f"{length_mm / 1000:.3f}m".rstrip('0').rstrip('.')
+
+                    details['height'] = f"{height_start}mm"
+                    details['thickness'] = f"{thickness_start}-{thickness_end}mm"  # Show full range
                 else:  # Standard patterns
                     length_mm = int(match.group(1))
                     height_mm = int(match.group(2))
                     thickness_mm = int(match.group(3))
 
-                    details['length'] = f"{length_mm / 1000:.1f}m"
+                    # FIXED: Don't round - show exact dimensions
+                    if length_mm == 2340:
+                        details['length'] = "2.34m"
+                    elif length_mm == 2355:
+                        details['length'] = "2.355m"
+                    else:
+                        details['length'] = f"{length_mm / 1000:.3f}m".rstrip('0').rstrip('.')
+
                     details['height'] = f"{height_mm}mm"
                     details['thickness'] = f"{thickness_mm}mm"
 
@@ -319,11 +401,11 @@ class ProductGroupManager:
 
     @staticmethod
     def group_products_efficiently(products):
-        """Efficiently group products avoiding duplicates"""
+        """Efficiently group products avoiding duplicates - UPDATED"""
         product_groups = {}
 
         for product in products:
-            main_category = ProductGroupManager.get_main_category(product.category, product.name)  # Pass name
+            main_category = ProductGroupManager.get_main_category(product.category, product.name)
             subcategory = ProductGroupManager.determine_product_subcategory(product)
             brand = ProductGroupManager.extract_brand_from_product(product)
 
@@ -331,6 +413,15 @@ class ProductGroupManager:
             if main_category == "Step Kits":
                 # Each step kit is unique, use product ID in key
                 group_key = f"stepkit_{product.id}"
+            # Special handling for sleeper cribs - group by color
+            elif 'sleeper crib' in subcategory.lower():
+                group_key = f"sleepercrib_{subcategory}_{brand or 'nobrand'}"
+            # Special handling for Good/Naughty UFPs - separate groups
+            elif 'good ufp' in subcategory.lower() or 'naughty ufp' in subcategory.lower():
+                group_key = f"ufp_{subcategory}_{brand or 'nobrand'}"
+            # Special handling for fence brackets - separate by type
+            elif 'fence bracket' in subcategory.lower():
+                group_key = f"bracket_{subcategory}_{brand or 'nobrand'}"
             else:
                 # Create a unique group key for identical products (different sizes)
                 group_key = f"{main_category}_{subcategory}_{brand or 'nobrand'}"
@@ -363,18 +454,20 @@ class ProductGroupManager:
 
     @staticmethod
     def apply_category_filter(products, category_filter):
-        """Apply category filtering"""
+        """Apply category filtering - UPDATED"""
         if category_filter == 'concrete-sleepers':
             return products.filter(
                 Q(category__icontains='Concrete Sleepers') |
-                Q(category__icontains='Sleeper'),
+                Q(category__icontains='Sleeper') |
+                Q(name__icontains='Sleeper Crib'),  # Include sleeper cribs
                 ~Q(name__icontains='Step Kit')  # Exclude step kits
             )
         elif category_filter == 'under-fence-plinths':
             return products.filter(
                 Q(category__icontains='Under Fence Plinths') |
                 Q(category__icontains='UFP'),
-                ~Q(name__icontains='Step Kit')  # Exclude step kits
+                ~Q(name__icontains='Step Kit'),  # Exclude step kits
+                ~Q(name__icontains='Sleeper Crib')  # Exclude sleeper cribs (moved to concrete sleepers)
             )
         elif category_filter == 'galvanised-steel':
             return products.filter(Q(category__icontains='Steel'))
@@ -502,19 +595,19 @@ def homepage(request):
 
 
 def our_range(request):
-    """Optimized product display with proper grouping info"""
+    """Optimized product display with proper grouping info - UPDATED"""
     try:
         category_filter = request.GET.get('category', '')
         search_query = request.GET.get('search', '')
 
         # Get all active products
         products_qs = Product.objects.filter(is_active=True).order_by('category', 'name')
-        print(f"🔍 Starting with {products_qs.count()} active products")
+        print(f"Starting with {products_qs.count()} active products")
 
         # Apply category filter if provided
         if category_filter and category_filter != 'all':
             products_qs = ProductGroupManager.apply_category_filter(products_qs, category_filter)
-            print(f"🔍 After category filter '{category_filter}': {products_qs.count()} products")
+            print(f"After category filter '{category_filter}': {products_qs.count()} products")
 
         # Apply search filter if provided
         if search_query:
@@ -522,11 +615,11 @@ def our_range(request):
                 Q(name__icontains=search_query) |
                 Q(category__icontains=search_query)
             )
-            print(f"🔍 After search filter '{search_query}': {products_qs.count()} products")
+            print(f"After search filter '{search_query}': {products_qs.count()} products")
 
         # Use efficient grouping
         product_groups = ProductGroupManager.group_products_efficiently(products_qs)
-        print(f"🔍 Created {len(product_groups)} product groups")
+        print(f"Created {len(product_groups)} product groups")
 
         # Convert groups to display format with proper variant info
         grouped_products = []
@@ -554,16 +647,16 @@ def our_range(request):
                     'category_slug': group_data['main_category'].lower().replace(' ', '-'),
                     'subcategory_slug': group_data['subcategory'].lower().replace(' ', '-').replace('/', '-'),
                     'brand_slug': (group_data['brand'] or "").lower().replace(' ', '-'),
-                    'variant_count': group_data['variant_count'],  # This is the key field
-                    'group_key': group_key  # For debugging
+                    'variant_count': group_data['variant_count'],
+                    'group_key': group_key
                 }
                 grouped_products.append(product_data)
-                print(f"  ✅ Group: {representative.name} - {group_data['variant_count']} variants")
+                print(f"Group: {representative.name} - {group_data['variant_count']} variants")
             except Exception as e:
-                print(f"❌ Error processing group {group_key}: {str(e)}")
+                print(f"Error processing group {group_key}: {str(e)}")
                 continue
 
-        print(f"✅ Returning {len(grouped_products)} product groups")
+        print(f"Returning {len(grouped_products)} product groups")
 
         # Filter options
         filter_options = {
@@ -572,7 +665,7 @@ def our_range(request):
                 {'name': 'Under Fence Plinths', 'slug': 'under-fence-plinths', 'icon': 'fas fa-layer-group'},
                 {'name': 'Galvanised Steel', 'slug': 'galvanised-steel', 'icon': 'fas fa-industry'},
                 {'name': 'Step Kits', 'slug': 'step-kits', 'icon': 'fas fa-stairs'},
-                {'name': 'Accessories', 'slug': 'accessories', 'icon': 'fas fa-tools'},
+                {'name': 'Accessories & Add-ons', 'slug': 'accessories', 'icon': 'fas fa-tools'},
             ]
         }
 
@@ -587,7 +680,7 @@ def our_range(request):
         return render(request, 'our_range_modern.html', context)
 
     except Exception as e:
-        print(f"❌ Error in our_range view: {str(e)}")
+        print(f"Error in our_range view: {str(e)}")
         import traceback
         traceback.print_exc()
 
@@ -599,7 +692,7 @@ def our_range(request):
                     {'name': 'Under Fence Plinths', 'slug': 'under-fence-plinths', 'icon': 'fas fa-layer-group'},
                     {'name': 'Galvanised Steel', 'slug': 'galvanised-steel', 'icon': 'fas fa-industry'},
                     {'name': 'Step Kits', 'slug': 'step-kits', 'icon': 'fas fa-stairs'},
-                    {'name': 'Accessories', 'slug': 'accessories', 'icon': 'fas fa-tools'},
+                    {'name': 'Accessories & Add-ons', 'slug': 'accessories', 'icon': 'fas fa-tools'},
                 ]
             },
             'current_category': category_filter,
@@ -610,13 +703,13 @@ def our_range(request):
 
 
 # ============================================================================
-# UNIFIED AJAX ENDPOINTS
+# UNIFIED AJAX ENDPOINTS - UPDATED
 # ============================================================================
 
 @require_GET
 def unified_product_api(request):
     """
-    Unified AJAX endpoint for all product-related operations
+    Unified AJAX endpoint for all product-related operations - UPDATED
     Handles: filtering, grouping, variants, options, and search
     """
     try:
@@ -639,7 +732,7 @@ def unified_product_api(request):
             }, status=400)
 
     except Exception as e:
-        print(f"❌ Error in unified_product_api: {str(e)}")
+        print(f"Error in unified_product_api: {str(e)}")
         return JsonResponse({
             'success': False,
             'error': str(e)
@@ -647,13 +740,13 @@ def unified_product_api(request):
 
 
 def handle_product_filtering(request):
-    """Handle product filtering with proper grouping maintained"""
+    """Handle product filtering with proper grouping maintained - UPDATED"""
     category = request.GET.get('category', '')
     subcategory = request.GET.get('subcategory', '')
     brand = request.GET.get('brand', '')
     search = request.GET.get('search', '')
 
-    print(f"🔍 AJAX Filter: cat={category}, subcat={subcategory}, brand={brand}, search={search}")
+    print(f"AJAX Filter: cat={category}, subcat={subcategory}, brand={brand}, search={search}")
 
     # Start with all active products
     products = Product.objects.filter(is_active=True)
@@ -671,27 +764,59 @@ def handle_product_filtering(request):
 
     # Use efficient grouping BEFORE applying subcategory/brand filters
     product_groups = ProductGroupManager.group_products_efficiently(products)
+    # Add this debug code right before the subcategory filtering loop
+    print(f"\n=== DEBUGGING SUBCATEGORY FILTER ===")
+    print(f"Requested subcategory: '{subcategory}'")
+    print(f"Available product groups and their subcategories:")
+    for group_key, group_data in product_groups.items():
+        print(f"  Group: {group_key}")
+        print(f"  Subcategory: '{group_data['subcategory']}'")
+        print(f"  Representative: {group_data['representative_product'].name}")
+        print("  ---")
+    print(f"=== END DEBUG ===\n")
+
+    # Apply subcategory and brand filtering to groups
+    # Replace the subcategory filtering section in handle_product_filtering function
+    # Around line 1090-1110 in views.py
 
     # Apply subcategory and brand filtering to groups
     filtered_groups = {}
+
+    # Debug: Print what we're filtering for
+    if subcategory or brand:
+        print(f"\n=== FILTER DEBUG ===")
+        print(f"Filtering for subcategory: '{subcategory}'")
+        print(f"Filtering for brand: '{brand}'")
+        print(f"Total groups before filter: {len(product_groups)}")
+
     for group_key, group_data in product_groups.items():
         include_group = True
 
         # Apply subcategory filtering
         if subcategory and subcategory.strip():
-            filter_subcategory = subcategory.lower().replace('-', ' ').strip()
-            product_subcategory = group_data['subcategory'].lower().strip()
+            filter_subcategory = subcategory.strip()
+            product_subcategory = group_data['subcategory']
 
-            if filter_subcategory not in product_subcategory and product_subcategory not in filter_subcategory:
+            # Check if they match exactly
+            if filter_subcategory != product_subcategory:
                 include_group = False
 
-        # Apply brand filtering
+        # Apply brand filtering (only if explicitly specified)
         if brand and brand.strip():
             if not group_data['brand'] or group_data['brand'].lower() != brand.lower():
                 include_group = False
 
+        # Add to filtered groups if it passes all filters
         if include_group:
             filtered_groups[group_key] = group_data
+            if subcategory or brand:
+                print(
+                    f"  Including: {group_data['representative_product'].name} (subcat: {group_data['subcategory']}, brand: {group_data['brand']})")
+
+    if subcategory or brand:
+        print(f"After filtering: {len(filtered_groups)} groups remain")
+        print(f"=== END FILTER DEBUG ===\n")
+
 
     # Convert to organized products
     organized_products = []
@@ -719,14 +844,14 @@ def handle_product_filtering(request):
                 'category_slug': group_data['main_category'].lower().replace(' ', '-'),
                 'subcategory_slug': group_data['subcategory'].lower().replace(' ', '-').replace('/', '-'),
                 'brand_slug': (group_data['brand'] or "").lower().replace(' ', '-'),
-                'variant_count': group_data['variant_count']  # Include variant count
+                'variant_count': group_data['variant_count']
             }
             organized_products.append(product_data)
         except Exception as e:
-            print(f"❌ Error processing group {group_key}: {str(e)}")
+            print(f"Error processing group {group_key}: {str(e)}")
             continue
 
-    print(f"✅ AJAX returning {len(organized_products)} product groups")
+    print(f"AJAX returning {len(organized_products)} product groups")
 
     return JsonResponse({
         'success': True,
@@ -736,7 +861,7 @@ def handle_product_filtering(request):
 
 
 def handle_product_variants(request):
-    """Handle getting product variants for grouped products"""
+    """Handle getting product variants for grouped products - UPDATED"""
     product_id = request.GET.get('product_id')
 
     if not product_id:
@@ -747,10 +872,12 @@ def handle_product_variants(request):
 
     try:
         base_product = Product.objects.get(id=product_id, is_active=True)
-        main_category = ProductGroupManager.get_main_category(base_product.category)
+        main_category = ProductGroupManager.get_main_category(base_product.category, base_product.name)
+        subcategory = ProductGroupManager.determine_product_subcategory(base_product)
 
-        print(f"🔍 Loading variants for {base_product.name} (category: {main_category})")
+        print(f"Loading variants for {base_product.name} (category: {main_category}, subcategory: {subcategory})")
 
+        # Step kits have no variants
         if main_category == "Step Kits" or 'step kit' in base_product.name.lower():
             return JsonResponse({
                 'success': True,
@@ -759,58 +886,88 @@ def handle_product_variants(request):
             })
 
         # Determine the product group characteristics
+        group_criteria = {}
+
         if main_category == "Concrete Sleepers":
-            color_group = ProductGroupManager.determine_sleeper_color_exact(base_product)
-            brand = ProductGroupManager.extract_brand_from_product(base_product)
-            group_criteria = {'color': color_group, 'brand': brand}
+            if 'sleeper crib' in subcategory.lower():
+                # Sleeper cribs - group by color only
+                color_group = ProductGroupManager.determine_sleeper_crib_color_exact(base_product)
+                brand = ProductGroupManager.extract_brand_from_product(base_product)
+                group_criteria = {'type': 'sleeper_crib', 'color': color_group, 'brand': brand}
+            else:
+                # Regular sleepers
+                color_group = ProductGroupManager.determine_sleeper_color_exact(base_product)
+                brand = ProductGroupManager.extract_brand_from_product(base_product)
+                group_criteria = {'type': 'sleeper', 'color': color_group, 'brand': brand}
+
         elif main_category == "Under Fence Plinths":
-            color_group = ProductGroupManager.determine_ufp_color_exact(base_product)
+            # UFPs including Good/Naughty types
+            ufp_type = ProductGroupManager.determine_ufp_type_and_color_exact(base_product)
             brand = ProductGroupManager.extract_brand_from_product(base_product)
-            group_criteria = {'color': color_group, 'brand': brand}
+            group_criteria = {'type': 'ufp', 'ufp_type': ufp_type, 'brand': brand}
+
         elif main_category == "Galvanised Steel":
             steel_type = ProductGroupManager.determine_steel_product_exact(base_product)
-            group_criteria = {'steel_type': steel_type}
+            group_criteria = {'type': 'steel', 'steel_type': steel_type}
+
+        elif main_category == "Accessories":
+            accessory_type = ProductGroupManager.determine_accessory_exact(base_product)
+            group_criteria = {'type': 'accessory', 'accessory_type': accessory_type}
         else:
-            # For accessories and step kits, no variants expected
+            # No variants for other types
             return JsonResponse({
                 'success': True,
                 'variants': [],
                 'has_variants': False
             })
 
-        print(f"🔍 Group criteria: {group_criteria}")
+        print(f"Group criteria: {group_criteria}")
 
         # Find all products that match the same group criteria
         all_products = Product.objects.filter(is_active=True)
         variants = []
 
         for product in all_products:
-
             if 'step kit' in product.name.lower():
                 continue
 
-            product_main_category = ProductGroupManager.get_main_category(product.category)
+            product_main_category = ProductGroupManager.get_main_category(product.category, product.name)
+            product_subcategory = ProductGroupManager.determine_product_subcategory(product)
 
             if product_main_category == main_category:
                 should_include = False
 
-                if main_category == "Concrete Sleepers":
+                if group_criteria['type'] == 'sleeper_crib':
+                    product_color = ProductGroupManager.determine_sleeper_crib_color_exact(product)
+                    product_brand = ProductGroupManager.extract_brand_from_product(product)
+                    if (product_color == group_criteria['color'] and
+                            product_brand == group_criteria['brand'] and
+                            'sleeper crib' in product_subcategory.lower()):
+                        should_include = True
+
+                elif group_criteria['type'] == 'sleeper':
                     product_color = ProductGroupManager.determine_sleeper_color_exact(product)
                     product_brand = ProductGroupManager.extract_brand_from_product(product)
                     if (product_color == group_criteria['color'] and
-                        product_brand == group_criteria['brand']):
+                            product_brand == group_criteria['brand'] and
+                            'sleeper crib' not in product_subcategory.lower()):
                         should_include = True
 
-                elif main_category == "Under Fence Plinths":
-                    product_color = ProductGroupManager.determine_ufp_color_exact(product)
+                elif group_criteria['type'] == 'ufp':
+                    product_ufp_type = ProductGroupManager.determine_ufp_type_and_color_exact(product)
                     product_brand = ProductGroupManager.extract_brand_from_product(product)
-                    if (product_color == group_criteria['color'] and
-                        product_brand == group_criteria['brand']):
+                    if (product_ufp_type == group_criteria['ufp_type'] and
+                            product_brand == group_criteria['brand']):
                         should_include = True
 
-                elif main_category == "Galvanised Steel":
+                elif group_criteria['type'] == 'steel':
                     product_steel_type = ProductGroupManager.determine_steel_product_exact(product)
                     if product_steel_type == group_criteria['steel_type']:
+                        should_include = True
+
+                elif group_criteria['type'] == 'accessory':
+                    product_accessory_type = ProductGroupManager.determine_accessory_exact(product)
+                    if product_accessory_type == group_criteria['accessory_type']:
                         should_include = True
 
                 if should_include:
@@ -838,7 +995,7 @@ def handle_product_variants(request):
         variants.sort(key=lambda x: x['price'])
         has_variants = len(variants) > 1
 
-        print(f"✅ Found {len(variants)} variants, has_variants: {has_variants}")
+        print(f"Found {len(variants)} variants, has_variants: {has_variants}")
 
         return JsonResponse({
             'success': True,
@@ -857,7 +1014,7 @@ def handle_product_variants(request):
             'error': 'Product not found'
         }, status=404)
     except Exception as e:
-        print(f"❌ Error getting variants: {str(e)}")
+        print(f"Error getting variants: {str(e)}")
         import traceback
         traceback.print_exc()
         return JsonResponse({
@@ -867,7 +1024,7 @@ def handle_product_variants(request):
 
 
 def handle_product_options(request):
-    """Handle getting product configuration options"""
+    """Handle getting product configuration options - UPDATED"""
     group = request.GET.get('group', '')
     category = request.GET.get('category', '')
 
@@ -878,9 +1035,15 @@ def handle_product_options(request):
     if category == 'steel':
         products = products.filter(category__icontains='Steel')
     elif category == 'sleepers':
-        products = products.filter(category__icontains='Sleepers')
+        products = products.filter(
+            Q(category__icontains='Sleepers') |
+            Q(name__icontains='Sleeper Crib')
+        )
     elif category == 'ufp':
-        products = products.filter(category__icontains='UFP')
+        products = products.filter(
+            Q(category__icontains='UFP') &
+            ~Q(name__icontains='Sleeper Crib')
+        )
 
     # Filter by specific product type based on group
     if '120ub65' in group.lower():
@@ -891,6 +1054,12 @@ def handle_product_options(request):
         products = products.filter(name__icontains='150UB14')
     elif '150x75' in group.lower():
         products = products.filter(name__icontains='150x75')
+    elif 'good ufp' in group.lower():
+        products = products.filter(name__icontains='UFP Good')
+    elif 'naughty ufp' in group.lower():
+        products = products.filter(name__icontains='UFP Naughty')
+    elif 'sleeper crib' in group.lower():
+        products = products.filter(name__icontains='Sleeper Crib')
 
     # Extract unique options from matching products
     lengths = set()
@@ -918,7 +1087,7 @@ def handle_product_options(request):
 
     def sort_dimension_key(dim_str):
         try:
-            return int(dim_str.replace('mm', '').split()[0])
+            return int(dim_str.replace('mm', '').replace('-', '').split()[0])
         except:
             return 999
 
@@ -933,7 +1102,7 @@ def handle_product_options(request):
 
 
 def handle_product_search(request):
-    """Handle product search with intelligent grouping"""
+    """Handle product search with intelligent grouping - UPDATED"""
     query = request.GET.get('q', '').strip()
 
     if not query:
@@ -976,7 +1145,7 @@ def handle_product_search(request):
 
 
 def handle_product_specifications(request):
-    """Handle finding exact product by specifications"""
+    """Handle finding exact product by specifications - UPDATED"""
     group = request.GET.get('group', '')
     brand = request.GET.get('brand', '')
     length = request.GET.get('length', '')
@@ -987,8 +1156,8 @@ def handle_product_specifications(request):
     products = Product.objects.filter(is_active=True)
 
     # Apply category filtering based on group
-    if 'sleepers' in group.lower():
-        products = products.filter(category__icontains='Sleeper')
+    if 'sleeper crib' in group.lower():
+        products = products.filter(name__icontains='Sleeper Crib')
 
         # Filter by brand
         if brand == 'silvercrete':
@@ -1012,29 +1181,39 @@ def handle_product_specifications(request):
         elif 'woodgrain' in group:
             products = products.filter(name__icontains='Woodgrain')
 
-        # Convert UI selections to database format
-        length_mm = convert_length_to_mm(length)
-        height_mm = convert_dimension_to_mm(height)
-        thickness_mm = convert_dimension_to_mm(thickness)
+    elif 'sleepers' in group.lower():
+        products = products.filter(
+            Q(category__icontains='Sleeper') &
+            ~Q(name__icontains='Sleeper Crib')
+        )
 
-        # Look for exact dimension match in product name
-        if length_mm and height_mm and thickness_mm:
-            dimension_pattern = f"{length_mm}x{height_mm}x{thickness_mm}"
-            matching_products = products.filter(name__icontains=dimension_pattern)
+        # Filter by brand
+        if brand == 'silvercrete':
+            products = products.filter(category__icontains='Silvercrete')
+        elif brand == 'outback':
+            products = products.filter(category__icontains='Outback')
 
-            if matching_products.exists():
-                product = matching_products.first()
-                return JsonResponse({
-                    'success': True,
-                    'product': {
-                        'id': product.id,
-                        'name': product.name,
-                        'price': f"{float(product.price):.2f}",
-                        'sku': getattr(product, 'sku', ''),
-                        'category': product.category,
-                        'image_url': product.image.url if hasattr(product, 'image') and product.image else None
-                    }
-                })
+        # Filter by color based on group name
+        if 'plain-grey' in group:
+            products = products.filter(name__icontains='Plain Grey')
+        elif 'plain-sandstone' in group:
+            products = products.filter(name__icontains='Plain Sandstone')
+        elif 'plain-charcoal' in group:
+            products = products.filter(name__icontains='Plain Charcoal')
+        elif 'charcoal-stackstone' in group:
+            products = products.filter(name__icontains='Stackstone')
+        elif 'charcoal-rockface' in group:
+            products = products.filter(name__icontains='Rockface').filter(name__icontains='CHAR')
+        elif 'sandstone-rockface' in group:
+            products = products.filter(name__icontains='Rockface').filter(name__icontains='SAND')
+        elif 'woodgrain' in group:
+            products = products.filter(name__icontains='Woodgrain')
+
+    elif 'good ufp' in group.lower():
+        products = products.filter(name__icontains='UFP Good')
+
+    elif 'naughty ufp' in group.lower():
+        products = products.filter(name__icontains='UFP Naughty')
 
     elif 'steel' in group.lower():
         products = products.filter(category__icontains='Steel')
@@ -1073,6 +1252,31 @@ def handle_product_specifications(request):
                             'image_url': product.image.url if hasattr(product, 'image') and product.image else None
                         }
                     })
+
+    # For concrete products, convert UI selections to database format
+    if 'sleeper' in group.lower() or 'ufp' in group.lower():
+        length_mm = convert_length_to_mm(length)
+        height_mm = convert_dimension_to_mm(height)
+        thickness_mm = convert_dimension_to_mm(thickness)
+
+        # Look for exact dimension match in product name
+        if length_mm and height_mm and thickness_mm:
+            dimension_pattern = f"{length_mm}x{height_mm}x{thickness_mm}"
+            matching_products = products.filter(name__icontains=dimension_pattern)
+
+            if matching_products.exists():
+                product = matching_products.first()
+                return JsonResponse({
+                    'success': True,
+                    'product': {
+                        'id': product.id,
+                        'name': product.name,
+                        'price': f"{float(product.price):.2f}",
+                        'sku': getattr(product, 'sku', ''),
+                        'category': product.category,
+                        'image_url': product.image.url if hasattr(product, 'image') and product.image else None
+                    }
+                })
 
     # No match found
     return JsonResponse({
@@ -1129,7 +1333,7 @@ def add_to_cart_modern(request, product_id):
             'error': 'Invalid quantity'
         }, status=400)
     except Exception as e:
-        print(f"❌ Add to cart error: {str(e)}")
+        print(f"Add to cart error: {str(e)}")
         return JsonResponse({
             'success': False,
             'error': 'Failed to add product to cart'
@@ -1413,7 +1617,7 @@ def calculate_delivery(request):
             })
 
     except Exception as e:
-        print(f"❌ Calculate delivery error: {str(e)}")
+        print(f"Calculate delivery error: {str(e)}")
         return JsonResponse({
             'success': True,
             'delivery_cost': 150.00,  # Default
@@ -1434,7 +1638,7 @@ def check_cart_steel(request):
             'is_steel_order': is_steel_order
         })
     except Exception as e:
-        print(f"❌ Error checking cart steel: {str(e)}")
+        print(f"Error checking cart steel: {str(e)}")
         return JsonResponse({
             'success': False,
             'is_steel_order': False
@@ -1610,7 +1814,7 @@ def create_payment_intent(request):
                 }
             )
         except stripe.error.StripeError as e:
-            print(f"❌ Stripe error: {str(e)}")
+            print(f"Stripe error: {str(e)}")
             return JsonResponse({'error': f'Payment processing error: {str(e)}'}, status=400)
 
         return JsonResponse({
@@ -1621,7 +1825,7 @@ def create_payment_intent(request):
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON data'}, status=400)
     except Exception as e:
-        print(f"❌ Payment intent error: {str(e)}")
+        print(f"Payment intent error: {str(e)}")
         return JsonResponse({'error': f'Internal error: {str(e)}'}, status=500)
 
 
@@ -1641,7 +1845,7 @@ def process_order(request):
             if intent.status != 'succeeded':
                 return JsonResponse({'error': 'Payment not completed'}, status=400)
         except Exception as e:
-            print(f"❌ Stripe verification error: {str(e)}")
+            print(f"Stripe verification error: {str(e)}")
             return JsonResponse({'error': 'Invalid payment'}, status=400)
 
         # Get or create customer
@@ -1701,7 +1905,7 @@ def process_order(request):
                 discount_code_obj = DiscountCode.objects.get(id=applied_discount['discount_id'])
                 discount_amount = Decimal(str(applied_discount['discount_amount']))
             except DiscountCode.DoesNotExist:
-                print(f"⚠️ Discount code {applied_discount.get('discount_id')} not found")
+                print(f"Discount code {applied_discount.get('discount_id')} not found")
                 pass
 
         # Calculate delivery cost
@@ -1742,7 +1946,7 @@ def process_order(request):
                 # FIXED: Use database Product model directly
                 product = Product.objects.get(id=product_id_str, is_active=True)
             except Product.DoesNotExist:
-                print(f"⚠️ Skipping product {product_id_str} - not found in database")
+                print(f"Skipping product {product_id_str} - not found in database")
                 continue
 
             unit_price = Decimal(str(product.price))
@@ -1777,7 +1981,7 @@ def process_order(request):
                 customer_email=customer.email,
                 discount_amount=discount_amount
             )
-            print(f"✅ Recorded discount usage: {discount_code_obj.code} - ${discount_amount}")
+            print(f"Recorded discount usage: {discount_code_obj.code} - ${discount_amount}")
 
         # Clear cart and discount from session
         request.session['cart'] = {}
@@ -1789,7 +1993,7 @@ def process_order(request):
         try:
             send_order_confirmation_email(order)
         except Exception as e:
-            print(f"❌ Email sending failed: {str(e)}")
+            print(f"Email sending failed: {str(e)}")
 
         return JsonResponse({
             'success': True,
@@ -1800,7 +2004,7 @@ def process_order(request):
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid request data'}, status=400)
     except Exception as e:
-        print(f"❌ Order processing error: {str(e)}")
+        print(f"Order processing error: {str(e)}")
         import traceback
         traceback.print_exc()
         return JsonResponse({'error': f'Order processing failed: {str(e)}'}, status=500)
@@ -1886,10 +2090,11 @@ def debug_discount_calculation(request):
         })
 
     except Exception as e:
-        print(f"❌ Debug discount error: {str(e)}")
+        print(f"Debug discount error: {str(e)}")
         import traceback
         traceback.print_exc()
         return JsonResponse({'error': str(e)}, status=500)
+
 
 def order_confirmation(request, order_number):
     """Order confirmation page"""
@@ -1935,7 +2140,7 @@ def send_order_confirmation_email(order):
 
 
 # ============================================================================
-# DISCOUNT MANAGEMENT
+# DISCOUNT MANAGEMENT - UPDATED
 # ============================================================================
 
 @require_POST
@@ -2005,7 +2210,7 @@ def apply_discount(request):
                 subtotal += item_total
 
             except Product.DoesNotExist:
-                print(f"⚠️ Product {product_id_str} not found in database")
+                print(f"Product {product_id_str} not found in database")
                 continue
 
         if not cart_items:
@@ -2068,7 +2273,7 @@ def apply_discount(request):
     except json.JSONDecodeError:
         return JsonResponse({'success': False, 'error': 'Invalid request data'})
     except Exception as e:
-        print(f"❌ Apply discount error: {str(e)}")
+        print(f"Apply discount error: {str(e)}")
         import traceback
         traceback.print_exc()
         return JsonResponse({'success': False, 'error': 'Internal server error'})
@@ -2097,13 +2302,13 @@ def get_delivery_slots(request):
 
     try:
         slot_type = request.GET.get('type', 'delivery')
-        logger.info(f"🔍 get_delivery_slots called with type: {slot_type}")
+        logger.info(f"get_delivery_slots called with type: {slot_type}")
 
         # Only show next 7 days
         start_date = date.today() + timedelta(days=1)  # Start from tomorrow
         end_date = start_date + timedelta(days=7)  # Only 1 week ahead
 
-        logger.info(f"🔍 Looking for slots between {start_date} and {end_date}")
+        logger.info(f"Looking for slots between {start_date} and {end_date}")
 
         # Auto-generate slots if needed
         from django.core.management import call_command
@@ -2112,9 +2317,9 @@ def get_delivery_slots(request):
         try:
             out = StringIO()
             call_command('generate_delivery_slots', days=7, stdout=out)
-            logger.info(f"🔄 Auto-generated slots for upcoming week")
+            logger.info(f"Auto-generated slots for upcoming week")
         except Exception as e:
-            logger.warning(f"⚠️ Could not auto-generate slots: {str(e)}")
+            logger.warning(f"Could not auto-generate slots: {str(e)}")
 
         # Filter slots based on type
         if slot_type == 'pickup':
@@ -2130,7 +2335,7 @@ def get_delivery_slots(request):
                 delivery_type__in=['internal', 'external', 'Both Available']
             ).order_by('date', 'time_slot')
 
-        logger.info(f"🔍 Found {slots.count()} {slot_type} slots")
+        logger.info(f"Found {slots.count()} {slot_type} slots")
 
         # Only show slots with available capacity
         available_slots = []
@@ -2138,7 +2343,7 @@ def get_delivery_slots(request):
             if slot.available_capacity > 0:
                 available_slots.append(slot)
 
-        logger.info(f"🔍 {len(available_slots)} slots have available capacity")
+        logger.info(f"{len(available_slots)} slots have available capacity")
 
         slots_data = []
         for slot in available_slots:
@@ -2154,7 +2359,7 @@ def get_delivery_slots(request):
                 'template_name': slot.template.name if slot.template else None,
             }
             slots_data.append(slot_data)
-            logger.debug(f"📅 Slot: {slot.date} {slot.time_slot} - {slot.available_capacity} available")
+            logger.debug(f"Slot: {slot.date} {slot.time_slot} - {slot.available_capacity} available")
 
         return JsonResponse({
             'success': True,
@@ -2167,7 +2372,7 @@ def get_delivery_slots(request):
         })
 
     except Exception as e:
-        logger.error(f"❌ Error in get_delivery_slots: {str(e)}", exc_info=True)
+        logger.error(f"Error in get_delivery_slots: {str(e)}", exc_info=True)
         return JsonResponse({
             'success': False,
             'error': 'Failed to load delivery slots',
@@ -2199,17 +2404,17 @@ def blog_detail(request, slug):
 
 def product_detail(request, slug):
     """Product detail view"""
-    print(f"🔍 Looking for product with slug: '{slug}'")
-    print(f"🔍 Available product keys: {list(products.keys())}")
+    print(f"Looking for product with slug: '{slug}'")
+    print(f"Available product keys: {list(products.keys())}")
 
     # Get the product from products_data.py
     product = products.get(slug)
 
     if not product:
-        print(f"❌ Product '{slug}' not found in products dictionary")
+        print(f"Product '{slug}' not found in products dictionary")
         similar = [key for key in products.keys() if slug.lower() in key.lower()]
         if similar:
-            print(f"🔍 Similar products found: {similar}")
+            print(f"Similar products found: {similar}")
 
         return render(request, 'product_detail.html', {
             'product': None,
@@ -2218,7 +2423,7 @@ def product_detail(request, slug):
             'error_message': f"Product '{slug}' not found. Available products: {list(products.keys())}"
         })
 
-    print(f"✅ Product found: {product.get('name', 'No name')}")
+    print(f"Product found: {product.get('name', 'No name')}")
 
     context = {
         'product': product,
@@ -2311,16 +2516,16 @@ def get_products_ajax(request):
         brand = request.GET.get('brand', '')
         search = request.GET.get('search', '')
 
-        print(f"🔍 AJAX Filter request: category={category}, subcategory={subcategory}, search={search}")
+        print(f"AJAX Filter request: category={category}, subcategory={subcategory}, search={search}")
 
         # Start with all active products
         products = Product.objects.filter(is_active=True)
-        print(f"🔍 Total active products: {products.count()}")
+        print(f"Total active products: {products.count()}")
 
         # Apply category filter
         if category and category != 'all':
             products = ProductGroupManager.apply_category_filter(products, category)
-            print(f"🔍 After category filter: {products.count()}")
+            print(f"After category filter: {products.count()}")
 
         # Apply search filter
         if search:
@@ -2328,7 +2533,7 @@ def get_products_ajax(request):
                 Q(name__icontains=search) |
                 Q(category__icontains=search)
             )
-            print(f"🔍 After search filter: {products.count()}")
+            print(f"After search filter: {products.count()}")
 
         # Group products to avoid showing duplicates
         product_groups = ProductGroupManager.group_products_efficiently(products)
@@ -2338,13 +2543,18 @@ def get_products_ajax(request):
         for group_key, group_data in product_groups.items():
             include_group = True
 
-            # Apply subcategory filtering
+            # Apply subcategory filtering - UPDATED for better matching
             if subcategory and subcategory.strip():
                 filter_subcategory = subcategory.lower().replace('-', ' ').strip()
                 product_subcategory = group_data['subcategory'].lower().strip()
 
-                if filter_subcategory not in product_subcategory and product_subcategory not in filter_subcategory:
-                    include_group = False
+                # Skip subcategory filtering for accessories - they show all accessories regardless of subcategory
+                if group_data['main_category'].lower() == 'accessories':
+                    pass  # Don't filter accessories by subcategory
+                else:
+                    # Handle specific subcategory filtering for non-accessories
+                    if filter_subcategory not in product_subcategory and product_subcategory not in filter_subcategory:
+                        include_group = False
 
             if include_group:
                 filtered_groups[group_key] = group_data
@@ -2378,7 +2588,7 @@ def get_products_ajax(request):
             }
             organized_products.append(product_data)
 
-        print(f"🔍 Returning {len(organized_products)} organized product groups")
+        print(f"Returning {len(organized_products)} organized product groups")
 
         return JsonResponse({
             'success': True,
@@ -2387,7 +2597,7 @@ def get_products_ajax(request):
         })
 
     except Exception as e:
-        print(f"❌ Error in get_products_ajax: {str(e)}")
+        print(f"Error in get_products_ajax: {str(e)}")
         import traceback
         traceback.print_exc()
         return JsonResponse({
@@ -2404,18 +2614,32 @@ def get_product_variants_ajax(request, product_id):
     try:
         # Get the base product
         base_product = Product.objects.get(id=product_id, is_active=True)
-        main_category = ProductGroupManager.get_main_category(base_product.category)
+        main_category = ProductGroupManager.get_main_category(base_product.category, base_product.name)
+        subcategory = ProductGroupManager.determine_product_subcategory(base_product)
 
         # Determine the product group
+        group_criteria = {}
+
         if main_category == "Concrete Sleepers":
-            color_group = ProductGroupManager.determine_sleeper_color_exact(base_product)
-            brand = ProductGroupManager.extract_brand_from_product(base_product)
+            if 'sleeper crib' in subcategory.lower():
+                # Sleeper cribs - group by color only
+                color_group = ProductGroupManager.determine_sleeper_crib_color_exact(base_product)
+                brand = ProductGroupManager.extract_brand_from_product(base_product)
+                group_criteria = {'type': 'sleeper_crib', 'color': color_group, 'brand': brand}
+            else:
+                # Regular sleepers
+                color_group = ProductGroupManager.determine_sleeper_color_exact(base_product)
+                brand = ProductGroupManager.extract_brand_from_product(base_product)
+                group_criteria = {'type': 'sleeper', 'color': color_group, 'brand': brand}
+
         elif main_category == "Under Fence Plinths":
-            color_group = ProductGroupManager.determine_ufp_color_exact(base_product)
+            ufp_type = ProductGroupManager.determine_ufp_type_and_color_exact(base_product)
             brand = ProductGroupManager.extract_brand_from_product(base_product)
+            group_criteria = {'type': 'ufp', 'ufp_type': ufp_type, 'brand': brand}
+
         elif main_category == "Galvanised Steel":
             steel_type = ProductGroupManager.determine_steel_product_exact(base_product)
-            brand = None
+            group_criteria = {'type': 'steel', 'steel_type': steel_type}
         else:
             # No variants for other types
             return JsonResponse({
@@ -2424,32 +2648,47 @@ def get_product_variants_ajax(request, product_id):
                 'has_variants': False
             })
 
-        # Find all products with the same color/type and brand
+        # Find all products with the same group criteria
         all_products = Product.objects.filter(is_active=True)
         variants = []
 
         for product in all_products:
-            product_main_category = ProductGroupManager.get_main_category(product.category)
+            if 'step kit' in product.name.lower():
+                continue
+
+            product_main_category = ProductGroupManager.get_main_category(product.category, product.name)
+            product_subcategory = ProductGroupManager.determine_product_subcategory(product)
 
             # Check if this product belongs to the same group
             if product_main_category == main_category:
                 should_include = False
 
-                if main_category == "Concrete Sleepers":
+                if group_criteria['type'] == 'sleeper_crib':
+                    product_color = ProductGroupManager.determine_sleeper_crib_color_exact(product)
+                    product_brand = ProductGroupManager.extract_brand_from_product(product)
+                    if (product_color == group_criteria['color'] and
+                            product_brand == group_criteria['brand'] and
+                            'sleeper crib' in product_subcategory.lower()):
+                        should_include = True
+
+                elif group_criteria['type'] == 'sleeper':
                     product_color = ProductGroupManager.determine_sleeper_color_exact(product)
                     product_brand = ProductGroupManager.extract_brand_from_product(product)
-                    if product_color == color_group and product_brand == brand:
+                    if (product_color == group_criteria['color'] and
+                            product_brand == group_criteria['brand'] and
+                            'sleeper crib' not in product_subcategory.lower()):
                         should_include = True
 
-                elif main_category == "Under Fence Plinths":
-                    product_color = ProductGroupManager.determine_ufp_color_exact(product)
+                elif group_criteria['type'] == 'ufp':
+                    product_ufp_type = ProductGroupManager.determine_ufp_type_and_color_exact(product)
                     product_brand = ProductGroupManager.extract_brand_from_product(product)
-                    if product_color == color_group and product_brand == brand:
+                    if (product_ufp_type == group_criteria['ufp_type'] and
+                            product_brand == group_criteria['brand']):
                         should_include = True
 
-                elif main_category == "Galvanised Steel":
+                elif group_criteria['type'] == 'steel':
                     product_steel_type = ProductGroupManager.determine_steel_product_exact(product)
-                    if product_steel_type == steel_type:
+                    if product_steel_type == group_criteria['steel_type']:
                         should_include = True
 
                 if should_include:
@@ -2497,7 +2736,7 @@ def get_product_variants_ajax(request, product_id):
             'error': 'Product not found'
         }, status=404)
     except Exception as e:
-        print(f"❌ Error getting variants: {str(e)}")
+        print(f"Error getting variants: {str(e)}")
         return JsonResponse({
             'success': False,
             'error': str(e)
@@ -2604,7 +2843,7 @@ def debug_cart_contents(request):
     """Debug function to check what's in cart and if steel is detected"""
     cart = request.session.get('cart', {})
 
-    print("🔍 CART DEBUG:")
+    print("CART DEBUG:")
     for cart_key, quantity in cart.items():
         if '-' in cart_key:
             product_id_str, thickness = cart_key.split('-', 1)
@@ -2623,7 +2862,7 @@ def debug_cart_contents(request):
             print(f"   Product ID {product_id_str} not found")
 
     is_steel_order = determine_if_steel_order(cart)
-    print(f"🚚 FINAL RESULT: Is steel order = {is_steel_order}")
+    print(f"FINAL RESULT: Is steel order = {is_steel_order}")
 
     return JsonResponse({
         'is_steel_order': is_steel_order,
@@ -2662,7 +2901,6 @@ def check_database_products(request):
         return JsonResponse({'error': str(e)})
 
 
-# 2. Check what the ProductGroupManager is doing:
 def debug_product_grouping(request):
     """Debug the product grouping logic"""
     try:
@@ -2671,7 +2909,7 @@ def debug_product_grouping(request):
         # Test the grouping without the manager
         results = []
         for product in products:
-            main_cat = ProductGroupManager.get_main_category(product.category)
+            main_cat = ProductGroupManager.get_main_category(product.category, product.name)
             subcat = ProductGroupManager.determine_product_subcategory(product)
             brand = ProductGroupManager.extract_brand_from_product(product)
 
@@ -2703,15 +2941,15 @@ def our_range_debug(request):
     try:
         # Get raw product count
         total_products = Product.objects.filter(is_active=True).count()
-        print(f"🔍 Total active products in DB: {total_products}")
+        print(f"Total active products in DB: {total_products}")
 
         # Get products without grouping
         products_qs = Product.objects.filter(is_active=True).order_by('category', 'name')
-        print(f"🔍 Products after basic filter: {products_qs.count()}")
+        print(f"Products after basic filter: {products_qs.count()}")
 
         # Test the grouping function
         product_groups = ProductGroupManager.group_products_efficiently(products_qs)
-        print(f"🔍 Product groups created: {len(product_groups)}")
+        print(f"Product groups created: {len(product_groups)}")
 
         # Show first few products for debugging
         sample_products = []

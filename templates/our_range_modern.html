@@ -1237,12 +1237,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function showSubFilters(category) {
         const subFilterOptions = {
-            'concrete-sleepers': ['Plain Grey', 'Plain Sandstone', 'Plain Charcoal', 'Charcoal Stackstone', 'Charcoal Rockface', 'Sandstone Rockface', 'Woodgrain'],
-            'under-fence-plinths': ['Plain Grey UFPs', 'Plain Sandstone UFPs', 'Plain Charcoal UFPs', 'Charcoal Stackstone UFPs'],
-            'galvanised-steel': ['120UB65 I Beam', '125x65 C Channel', '150UB14 I Beam', '150x75 C Channel'],
-            'step-kits': ['Step Kits Wide Opening', 'Step Kit Tread'],
-            'accessories': ['Step Kit Brackets', 'Fence Brackets', 'Wheel Stops', 'Chemical Anchor Glue']
-        };
+    'concrete-sleepers': ['Plain Grey', 'Plain Sandstone', 'Plain Charcoal', 'Charcoal Stackstone', 'Charcoal Rockface', 'Sandstone Rockface', 'Woodgrain'],
+    'under-fence-plinths': [
+        'Good UFP - Plain Grey',
+        'Good UFP - Plain Charcoal',
+        'Naughty UFP - Plain Grey',
+        'Naughty UFP - Plain Sandstone',
+        'Naughty UFP - Plain Charcoal',
+        'Naughty UFP - Charcoal Stackstone',
+        'UFP - Plain Grey',  // For Outback Sleepers
+        'UFP - Plain Charcoal'  // For Outback Sleepers
+    ],
+    'galvanised-steel': ['120UB65 I Beam', '125x65 C Channel', '150UB14 I Beam', '150x75 C Channel'],
+    'step-kits': ['Step Kits Wide Opening', 'Step Kit Tread'],
+};
 
         const container = subFilters.querySelector('div');
         if (!container) return;
